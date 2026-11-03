@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CBSL Dataset Catalog – Data Collection</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font:13px Calibri,"Segoe UI",Arial,sans-serif;color:#1b2430;background:#f3f5f8}
+button,select,textarea{font:inherit}
+#start{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0e2841;z-index:60}
+.card{background:#fff;border-radius:12px;padding:28px;width:min(520px,92vw)}
+.card h2{margin:0 0 6px;color:#0e2841}
+.card p{margin:0 0 16px;color:#556}
+.card select{width:100%;padding:10px;margin-bottom:14px;border:1px solid #9aa;border-radius:6px}
+.btn{background:#0e2841;color:#fff;border:0;border-radius:6px;padding:8px 14px;cursor:pointer}
+.btn.alt{background:#fff;color:#0e2841;border:1px solid #0e2841}
+.btn.gold{background:#c9a227;color:#0e2841;font-weight:700}
+#top{position:sticky;top:0;z-index:40;background:#0e2841;color:#fff;padding:10px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+#top h1{font-size:16px;margin:0 8px 0 0}
+#dn{background:#c9a227;color:#0e2841;padding:3px 10px;border-radius:12px;font-weight:700}
+#st{margin-left:auto;font-size:12px;opacity:.9}
+#tabs{display:flex;gap:4px;padding:8px 14px 0;background:#dfe5ec;flex-wrap:wrap}
+#tabs button{border:0;background:#c9d3de;padding:7px 14px;border-radius:6px 6px 0 0;cursor:pointer}
+#tabs button.on{background:#fff;font-weight:700}
+.wrap{overflow:auto;height:calc(100vh - 100px);background:#fff}
+#grid{border-collapse:separate;border-spacing:0;table-layout:fixed;width:max-content;max-width:none}
+#grid th,#grid td{box-sizing:border-box;min-width:0}
+#grid th{position:sticky;white-space:normal}
+#grid td{overflow:hidden;position:relative}
+#grid td.act{position:static;left:auto}
+#grid td.id{position:static;left:auto;z-index:auto}
+/* Freeze control: when enabled, keep the row-number column pinned while scrolling horizontally. Header rows are already sticky vertically. */
+#entry.freeze-enabled #grid th.sa{position:sticky;left:0;z-index:8}
+#entry.freeze-enabled #grid td.act{position:sticky;left:0;z-index:2;background:#f4f7fb;min-width:84px;width:84px}
+#entry.freeze-enabled #grid td.act b{background:transparent}
+table{border-collapse:separate;border-spacing:0;table-layout:fixed}
+th{position:sticky;padding:6px 4px;text-align:center;font-weight:400;border-right:1px solid #fff;overflow-wrap:anywhere}
+th.m{font-weight:700}
+th.m i{color:#ffd54f;font-style:normal;margin-left:2px}
+tr.letters th{top:0;height:24px;z-index:5;background:#e4ebf4;color:#29445f;font-size:11px;font-weight:700;border-bottom:1px solid #bdc9d8}
+tr.gr th{top:24px;height:30px;z-index:4;font-weight:700}
+tr.cr th{top:54px;height:50px;z-index:3}
+th.sa{left:auto;z-index:5;top:0;background:#0e2841;color:#fff;width:84px;min-width:84px;max-width:84px}
+th.si{left:auto;z-index:4}
+td{border-right:1px solid #d6dbe2;border-bottom:1px solid #d6dbe2;padding:0;vertical-align:top;background:#fff}
+td textarea,td select{box-sizing:border-box;width:100%;min-width:0;max-width:100%;border:0;margin:0;padding:5px;background:transparent;display:block;height:30px;resize:vertical;overflow:hidden}
+td textarea:focus,td select:focus{outline:2px solid #2f75b5;outline-offset:-2px;background:#fff}
+td.ro textarea{background:#eef1f5;color:#445;resize:none}
+td.e{background:#ffd0d0;box-shadow:inset 0 0 0 1px #e05252}
+td textarea.pk{cursor:pointer;resize:none;padding-right:22px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23456' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 6px top 11px}
+  .entry-select{display:block;box-sizing:border-box;width:100%;min-height:30px;border:1px solid #b9c8d8;border-radius:5px;padding:4px 48px 4px 8px;background-color:#fff;color:#17324d;font:inherit;font-size:12px;cursor:pointer;max-width:100%;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2352677d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.entry-select:focus{outline:2px solid #2f75b5;outline-offset:1px}
+#cb{position:fixed;z-index:80;background:#fff;border:1px solid #2f75b5;border-radius:4px;box-shadow:0 6px 18px #0003;display:none;max-height:260px;overflow:auto;padding:4px 0}
+#cb label{display:flex;gap:8px;align-items:center;padding:5px 10px;cursor:pointer;white-space:nowrap}
+#cb label:hover{background:#e8f1fb}
+#cb input#cbx,#cb input#cbSearch{display:block;width:calc(100% - 16px);margin:5px 8px;padding:7px;border:1px solid #9aa;border-radius:4px}#cb input#cbSearch{position:sticky;top:0;background:#fff;z-index:1}
+#adm{position:fixed;inset:0;background:#eef1f6;z-index:65;display:none;flex-direction:column;overflow:hidden}
+.am{flex:1;display:flex;min-height:0}
+.side{width:270px;flex:none;background:#fff;border-right:1px solid #dde3ea;display:flex;flex-direction:column}
+.side input{margin:12px;padding:9px 12px;border:1px solid #cfd6df;border-radius:8px}
+.sl{overflow:auto;padding:0 8px 12px;flex:1}
+.sl button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;padding:9px 10px;border-radius:10px;cursor:pointer;margin-bottom:2px;color:inherit}
+.sl button:hover{background:#eef3fa}
+.sl button.on{background:#0e2841;color:#fff}
+.sl button.z{opacity:.55}
+.sl b{min-width:50px;font-size:12px;background:#e8f1fb;color:#0e2841;border-radius:6px;padding:3px 6px;text-align:center}
+.sl button.on b{background:#c9a227}
+.sl span{flex:1;font-size:12px;line-height:1.25}
+.sl em{font-style:normal;font-weight:700;font-size:12px}
+.main{flex:1;overflow:auto;padding:22px 26px}
+.main h1{margin:0 0 4px;color:#0e2841;font-size:24px}
+.sub{color:#667;margin-bottom:18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:18px}
+.kp{background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 2px 8px #0e284114;display:flex;gap:14px;align-items:center}
+.kp .ic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#e8f1fb;flex:none}
+.kp b{display:block;font-size:26px;color:#0e2841;line-height:1.1}
+.kp span{color:#667;font-size:12px}
+.pn{background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 2px 8px #0e284114;margin-bottom:18px}
+.pn h2{margin:0 0 12px;font-size:15px;color:#0e2841}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:18px}
+.dn{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-bottom:18px}
+.dn .pn,.g2 .pn{margin:0}
+.dc{display:flex;gap:14px;align-items:center}
+.dc ul{list-style:none;margin:0;padding:0;font-size:12px;flex:1;min-width:0}
+.dc li{display:flex;gap:6px;align-items:center;margin:3px 0}
+.dc li i{width:10px;height:10px;border-radius:3px;flex:none}
+.dc li span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb{display:grid;grid-template-columns:minmax(90px,200px) 1fr 46px;gap:10px;align-items:center;margin:6px 0;font-size:12px}
+.hb a{cursor:pointer;color:#2f75b5;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb .tr{display:flex;background:#e8edf3;border-radius:6px;height:16px;overflow:hidden}
+.hb .tr i{display:block;height:100%}
+.hb b{text-align:right}
+.lg{display:flex;gap:14px;font-size:12px;margin-bottom:6px}
+.lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
+.pn .sw{border:0;max-height:520px}
+.ab{position:sticky;top:0;z-index:5;background:#0e2841;color:#fff;padding:10px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.ab h1{font-size:16px;margin:0 auto 0 0}
+.ab select{padding:7px;border-radius:6px}
+.ad{padding:16px 20px}
+.ad h2{color:#0e2841;margin:22px 0 8px}
+.ad h3{color:#0e2841;margin:20px 0 6px;padding:6px 10px;background:#fff;border-left:5px solid #c9a227}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.sc{background:#fff;border-radius:10px;padding:16px;border-top:4px solid #c9a227;box-shadow:0 1px 4px #0002}
+.sc b{display:block;font-size:30px;color:#0e2841}
+.sc.sm b{font-size:22px}
+.chip{display:inline-block;background:#e8f1fb;border-radius:12px;padding:2px 10px;margin:2px 4px 2px 0}
+.bk{margin:6px 0}
+.bt{font-weight:700;color:#0e2841;margin-right:8px}
+.dstat{background:#fff;padding:8px 14px;margin:8px 0;border:1px solid #d6dbe2}
+.br{display:grid;grid-template-columns:minmax(200px,320px) 1fr 40px;gap:8px;align-items:center;margin:4px 0}
+.br div{background:#e3e8ef;border-radius:4px;height:14px}
+.br i{display:block;height:100%;background:#c9a227;border-radius:4px}
+.tbs{display:flex;flex-wrap:wrap;gap:4px;padding:8px 14px;background:#dfe5ec}
+.tbs button{border:0;background:#c9d3de;padding:6px 12px;border-radius:6px;cursor:pointer}
+.tbs button.on{background:#0e2841;color:#fff;font-weight:700}
+.tbs button.z{opacity:.55}
+.at tr.cl{cursor:pointer}
+.at tr.cl:hover td{background:#fff3c4}
+.sw{overflow:auto;max-height:480px;background:#fff;border:1px solid #d6dbe2}
+.at{border-collapse:collapse}
+.at th,.at td{border:1px solid #d6dbe2;padding:5px 8px;text-align:left;vertical-align:top;overflow-wrap:anywhere;white-space:pre-wrap}
+.at th{position:sticky;top:0;background:#0e2841;color:#fff;z-index:1}
+.at.wide{table-layout:fixed}
+.at td.e{background:#ffd0d0}
+.at tr.tt td{font-weight:700;background:#fff3c4}
+#addbar{position:sticky;left:0;width:fit-content;padding:10px 14px}
+td.act{position:static;left:auto;z-index:auto;width:84px;min-width:84px;max-width:84px;background:#eef1f5;text-align:center;white-space:nowrap;overflow:hidden}
+td.act b{display:inline-block;width:20px;color:#667}
+td.act button{border:0;background:none;cursor:pointer;color:#456;padding:4px 2px}
+td.act .del:hover{color:#c00000}
+td.id{position:static;left:auto;z-index:auto;font-weight:700}
+option.x{color:#c00000}
+#sg{position:fixed;z-index:80;background:#fff;border:1px solid #2f75b5;border-radius:4px;box-shadow:0 6px 18px #0003;display:none;max-height:240px;overflow:auto}
+#sg div{padding:5px 8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#sg div.on,#sg div:hover{background:#2f75b5;color:#fff}
+.rf td{padding:5px 8px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;min-width:90px;vertical-align:top}
+.rf td[contenteditable="true"]{background:#fffef2;outline-offset:-2px}.rf td[contenteditable="true"]:focus{outline:2px solid #2f75b5}
+#mod{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:70}
+#notesSidebar{position:fixed;right:0;top:100px;height:calc(100vh - 100px);width:min(320px,88vw);background:#fff;box-shadow:-12px 0 35px #0e284133;z-index:1200;display:none;flex-direction:column;border-left:1px solid #d8e0ea;overflow:hidden}
+#notesSidebar .ns-head{padding:16px 18px;background:#0e2841;color:#fff;display:flex;align-items:center;justify-content:space-between}
+#notesSidebar .ns-content{padding:10px;overflow:auto;flex:1}
+#notesSidebar .note-item{display:grid;grid-template-columns:1fr auto;gap:8px;padding:10px 8px;border-bottom:1px solid #e1e7ef;align-items:start;cursor:pointer;border-radius:6px}
+#notesSidebar .note-item:hover{background:#f2f7fc}
+#notesSidebar .note-item.done{opacity:.62}
+#notesSidebar .note-meta{font-size:12px;color:#52657a;margin-bottom:5px}
+#notesSidebar .note-body{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}
+#noteEditor{position:fixed;z-index:1300;display:none;width:min(320px,90vw);padding:12px;background:#fff;border:1px solid #9bb6d0;border-radius:10px;box-shadow:0 10px 28px #0e284133}
+#noteEditor textarea{width:100%;min-height:100px;box-sizing:border-box;padding:8px;border:1px solid #cbd5e1;border-radius:6px}
+#noteEditor .note-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+#mod .card{width:min(680px,94vw);max-height:88vh;overflow:auto}
+#mod table{width:100%;table-layout:auto;margin:10px 0}
+#mod td{padding:4px 6px}
+#mod select{margin:0;padding:5px}
+#entry{height:calc(100vh - 148px)}
+#entryStatus{display:none;flex:none;min-height:30px;padding:6px 14px;background:#e8edf4;border-top:1px solid #cbd5e1;color:#334b63;font-size:12px;gap:18px;align-items:center;flex-wrap:wrap}
+#entryStatus span{white-space:nowrap}body.entry #entryStatus{display:flex}body.entry #st,body.entry #ms,body.entry #historyStatus{display:none!important}
+#tools{display:none;gap:8px;align-items:center;flex-wrap:wrap;padding:6px 14px;background:#eef1f6}
+#tools label{display:flex;align-items:center;gap:4px}
+#tools input[type=color]{width:34px;height:26px;padding:0;border:1px solid #9aa}
+td.sel{box-shadow:inset 0 0 0 2px #2f75b5}
+.col-drag-handle{display:inline-block;cursor:grab;user-select:none;touch-action:none;margin-right:5px;opacity:.7;font-size:16px;line-height:1}.col-drag-handle:active{cursor:grabbing}#hd th[data-drag-col]{cursor:grab;user-select:none}#hd th[data-drag-col] *{user-select:none}.dragging-col{opacity:.45;outline:2px dashed #173f67}
+/* Hide the blue selection/fill handle visually while retaining its drag target. */
+#fh{position:fixed;width:9px;height:9px;background:transparent!important;border:0!important;cursor:crosshair;display:none;z-index:35;pointer-events:auto}
+.rz{position:absolute;top:0;right:0;width:6px;height:100%;cursor:col-resize}
+.rr{position:absolute;left:0;bottom:0;width:100%;height:5px;cursor:row-resize}
+td.act button.ins{color:#2f75b5}
+#tools{box-shadow:0 2px 6px #0e28410d;border-bottom:1px solid #d8e0ea}
+#tools .btn{transition:transform .12s,box-shadow .12s,background .12s}
+#tools .btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 3px 8px #0e284122}
+#tools .btn:disabled{opacity:.42;cursor:not-allowed}
+#historyStatus{font-size:11px;color:#52657a;margin:0 8px}
+td.note-cell{position:relative}
+td.note-cell textarea{box-sizing:border-box;width:100%;padding-right:48px}
+.note-btn{position:absolute;right:3px;top:3px;z-index:2;width:21px;height:21px;padding:0;border:0;border-radius:5px;background:#eef5ff;color:#2f75b5;cursor:pointer;opacity:.45;line-height:21px;font-size:12px}
+td:hover .note-btn,.note-btn.has-note{opacity:1}
+/* Keep the cell-note control separate from the custom dropdown arrow. */
+td.note-cell textarea.pk{padding-right:48px;background-position:right 8px center}
+td.note-cell:has(textarea.pk) .note-btn,td.note-cell:has(.entry-select) .note-btn{right:27px}
+td.note-cell:has(.entry-select) .entry-select{padding-right:52px}
+.note-btn.has-note{background:#fff0b3;color:#795900}
+#tools label{border:1px solid #d6dde7;border-radius:7px;padding:3px 7px;background:#fff;color:#30455b}
+#tools label input{cursor:pointer}
+#tb textarea{white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;resize:none;min-height:30px}
+.notes-panel{max-height:75vh;overflow:auto}.note-item{display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px;border-bottom:1px solid #e1e7ef;align-items:start}.note-item button{white-space:nowrap}.note-item.done{opacity:.65}.note-item .note-body{white-space:pre-wrap;overflow-wrap:anywhere}.note-item .note-meta{font-size:12px;color:#607287;margin-bottom:4px}
+body{height:100vh;display:flex;flex-direction:column;overflow:hidden;background:#eef2f8}
+#top{position:static;flex:none;background:linear-gradient(90deg,#0e2841,#1d4f7c);padding:10px 18px;gap:14px;box-shadow:0 2px 10px #0004}
+.brand{display:flex;align-items:center;gap:10px;color:#fff;font-size:18px;font-weight:700}
+.logo{background:#fff;color:#c00000;font-weight:800;border-radius:20px;padding:4px 14px}
+.hg{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hg.right{margin-left:auto}
+#top .hg.d-only{margin-left:auto}
+#bdl{order:99}
+#dt mark.search-hit{background:#ffe66d;color:#1d2939;border-radius:2px;padding:0 1px}
+#top .btn{background:#ffffff1f;border:1px solid #ffffff40;border-radius:8px}
+#top .btn:hover{background:#ffffff38}
+#top .btn.gold{background:#c9a227;color:#0e2841;border-color:#c9a227}
+#previewWarning{display:none;margin:10px 14px;padding:13px 16px;border:2px solid #d97706;border-left:7px solid #b45309;border-radius:8px;background:#fff4d6;color:#713f12;font-size:13px;line-height:1.5}
+#previewWarning strong{display:block;font-size:14px;margin-bottom:3px;color:#7c2d12}
+body.preview-mode #previewWarning{display:block}
+body.preview-mode #saveNow{background:#0e6848;color:#fff;border-color:#0e6848}
+#top label{font-size:12px;color:#fff}
+#st{margin-left:0}
+body.dash .e-only,body.entry .d-only{display:none}
+/* Keep mode-specific header controls strictly scoped to their own page. */
+#top .hg.e-only{display:flex}
+body.dash #top .hg.e-only{display:none!important}
+body.entry #top .hg.d-only{display:none!important}
+body.entry #fillThroughSystem{display:none!important}
+body.entry #ms{display:none!important}
+body.dash #top .hg.d-only{display:flex}
+body.dash #pgE,body.entry #dash{display:none}
+#pgE{flex:1;min-height:0;display:flex;flex-direction:column}
+#entry,#ref{height:auto;flex:1;min-height:0}
+#dash{flex:1;min-height:0;overflow:hidden;position:relative}
+.dg{display:grid;grid-template-columns:320px 1fr;height:100%}
+.dg.nostats{grid-template-columns:1fr}
+.dg.nostats .dsb{display:none}
+.dsb{background:linear-gradient(180deg,#2b5a8a,#1c3f66);color:#fff;padding:16px;overflow:auto}
+.dsb h3{margin:0 0 12px;font-size:16px}
+.dsb h4{margin:18px 0 4px;font-size:12px;text-align:center}
+.kcs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kc{background:#ffffff1f;border-radius:12px;padding:10px 12px}
+.kc:last-child{grid-column:1/-1}
+.kc span{display:block;font-size:11px;opacity:.85}
+.kc b{font-size:28px}
+.pie{width:150px;height:150px;border-radius:50%;margin:8px auto}
+.dsb ul{list-style:none;padding:0;margin:4px 0;font-size:11px}
+.dsb li{display:flex;gap:6px;align-items:center}
+.dsb li i{width:9px;height:9px;flex:none}
+.dmn{display:flex;flex-direction:column;gap:14px;padding:16px 20px;overflow:hidden;min-width:0}
+.pn2{background:#fff;border-radius:14px;box-shadow:0 2px 10px #0e284118;padding:14px 16px}
+.flt{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end}
+.flt label{display:block;font-size:12px;font-weight:700;color:#0e2841;margin-bottom:4px}
+.flt .kw,.dds{padding:9px 12px;border:1px solid #cfd6df;border-radius:10px;min-width:230px;background:#fff}
+details.ms{position:relative}
+details.ms summary{cursor:pointer;list-style:none}
+details.ms .mp{position:absolute;z-index:20;background:#fff;border:1px solid #cfd6df;border-radius:8px;max-height:260px;overflow:auto;min-width:320px;padding:4px 0;box-shadow:0 8px 20px #0003}
+details.ms .mp label{display:flex;gap:8px;margin:0;padding:5px 10px;font-weight:400;cursor:pointer}
+.tcard{flex:1;min-height:0;display:flex;flex-direction:column}
+.th{display:flex;align-items:baseline;gap:12px;margin-bottom:8px}
+.th h2{margin:0;color:#1456ff;font-size:20px}
+.th span{color:#667;font-size:12px}
+#dt{flex:1;min-height:0;overflow:auto;position:relative;isolation:isolate}
+#dt table{border-collapse:separate;border-spacing:0;table-layout:fixed;min-width:100%;width:max-content}
+#dt th{position:sticky;top:0;z-index:5;background:#f4f7fb;color:#29445f;text-align:left;padding:10px 9px;white-space:normal;overflow-wrap:anywhere;font-size:13px;font-weight:700;border-top:3px solid #ccc;border-bottom:1px solid #dce5ef;border-right:0;box-shadow:0 1px 0 #dce5ef}
+#dt td{padding:9px 10px;border:0;border-bottom:1px solid #e6ebf2;min-width:130px;max-width:340px;white-space:normal;overflow-wrap:break-word;vertical-align:top;line-height:1.35}
+#dt tr:hover td{background:#eef5ff;cursor:pointer}
+.empty{color:#667;padding:20px}
+.drw{position:absolute;top:0;right:0;bottom:0;width:310px;background:#fff;box-shadow:-8px 0 24px #0003;transform:translateX(105%);transition:transform .25s;z-index:30;display:flex;flex-direction:column}
+.drw.open{transform:none}
+.dh{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:#0e2841;color:#fff}
+.dh .x{background:none;border:0;color:#fff;cursor:pointer;font-size:16px}
+.dq{display:flex;gap:6px;padding:10px 14px}
+.dl{overflow:auto;padding:0 14px 14px;flex:1}
+.dl label{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;border-bottom:1px solid #f0f2f6}
+.dl i{width:10px;height:10px;border-radius:3px;flex:none}
+.kv div{display:grid;grid-template-columns:190px 1fr;gap:10px;padding:6px 0;border-bottom:1px solid #eee}
+.kv b{color:#0e2841}
+.kv span{white-space:pre-wrap;overflow-wrap:anywhere}
+#mf{display:none;width:100%;margin-top:12px;padding-top:12px;border-top:1px dashed #d6dde7}
+#mf.on{display:flex}
+.dd{position:relative}
+.ddb{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:230px;padding:9px 12px;border:1px solid #cfd6df;border-radius:10px;background:#fff;cursor:pointer;color:#0e2841;font-weight:600;box-shadow:0 1px 2px #0e28410d}
+.ddb:hover{border-color:#2f75b5}
+.ddb em{font-style:normal;color:#2f75b5}
+.ddb.on span{background:#2f75b5;color:#fff;border-radius:10px;padding:0 10px}
+.dd.open .ddb{border-color:#2f75b5;box-shadow:0 0 0 3px #2f75b533}
+.ddp{display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:25;width:310px;background:#fff;border:1px solid #d6dde7;border-radius:12px;box-shadow:0 12px 28px #0e284133;overflow:hidden}
+.dd.open .ddp{display:block}
+.dds{width:calc(100% - 20px);margin:10px;min-width:0!important}
+.ddl{max-height:240px;overflow:auto}
+.ddl label{display:flex!important;align-items:center;gap:8px;padding:7px 14px;margin:0!important;font-weight:400!important;cursor:pointer}
+.ddl label:hover{background:#eef5ff}
+.dd-no-results{padding:10px 14px;color:#718096;font-size:12px;font-style:italic}
+.ddf{display:flex;justify-content:space-between;padding:8px 14px;border-top:1px solid #eef1f6;font-size:12px}
+.ddf a{color:#2f75b5;cursor:pointer}
+#cnb{flex:none;display:none;align-items:center;gap:12px;background:#fff3c4;color:#5a4500;padding:8px 18px}
+.dupid textarea{color:#c00000;font-weight:700}
+
+/* Professional dashboard polish and compact side-panel controls */
+.ui-icon{width:16px;height:16px;display:inline-block;vertical-align:-3px;margin-right:5px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#dash{background:#f3f6fb}
+.dg{grid-template-columns:320px minmax(0,1fr);gap:0;position:relative;transition:grid-template-columns .2s ease}
+.dg.nostats{grid-template-columns:minmax(0,1fr)}
+.dg.nostats .dsb{display:none}
+.dg.nostats .dmn{display:flex;min-width:0;width:100%;grid-column:1 / -1}
+.dg .dmn{min-width:0}
+.dg .tcard,#dt{min-width:0}
+.dsb{padding:22px 18px 18px 46px;background:linear-gradient(160deg,#163a5f 0%,#245b8a 58%,#173754 100%);box-shadow:inset -1px 0 #ffffff1a}
+.dsb h3{font-size:17px;letter-spacing:.2px}
+.kc{background:#ffffff16;border:1px solid #ffffff20;box-shadow:0 4px 14px #061c3030}
+.kc b{font-size:27px;letter-spacing:-.5px}
+.dmn{padding:20px 22px;gap:16px}
+.pn2{border:1px solid #e5ebf3;border-radius:15px;box-shadow:0 5px 18px #193b5b0a}
+.th{align-items:center;padding:3px 2px 10px;border-bottom:1px solid #edf1f6}
+.th h2{font-size:20px;color:#173a5b;letter-spacing:-.3px}
+.th span{margin-left:auto;background:#eef4fb;color:#47627c;padding:5px 9px;border-radius:20px;font-weight:600}
+#dt th{background:#f4f7fb;color:#29445f}
+#dt td{color:#344b61}
+#dt tr:hover td{background:#edf5ff}
+.panel-toggle{position:absolute;z-index:35;top:50%;transform:translateY(-50%);width:32px;height:64px;border:1px solid #d9e3ee;background:#fff;color:#244b70;box-shadow:0 3px 14px #12334b1c;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.panel-toggle:hover{background:#eaf3fc;color:#0d5c9b}
+.panel-toggle svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#toggleStats{left:0;border-radius:0 10px 10px 0}
+#toggleColumns{right:0;border-radius:10px 0 0 10px}
+#statsMenuBtn{font-size:20px;line-height:1;min-width:38px;padding:8px 11px;font-weight:700}
+#columnMenuBtn{margin-left:auto;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+#columnMenuBtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.drw{box-shadow:-10px 0 32px #0e284126;border-left:1px solid #e0e7ef}
+.dh{background:#173e62}
+.dq .btn{border-radius:8px}
+@media(max-width:900px){.dg{grid-template-columns:260px minmax(0,1fr)}.dg.nostats{grid-template-columns:minmax(0,1fr)}.dmn{padding:12px}.dsb{padding-left:40px}}
+@media(max-width:650px){.dg{grid-template-columns:minmax(0,1fr)}.dsb{display:none}.dg:not(.nostats) .dsb{display:block;position:absolute;inset:0 auto 0 0;width:min(85vw,300px);z-index:28}.dg.nostats{grid-template-columns:minmax(0,1fr)}.panel-toggle{width:28px;height:52px}}
+
+/* Header alignment: keep branding on the left, dashboard controls neatly aligned, and Download at the right edge of the control group. */
+#top .brand{display:flex;align-items:center;gap:12px;margin-right:auto;white-space:nowrap;flex:none}
+#top .hg{display:flex;align-items:center;gap:8px;min-width:0}
+#top .hg.d-only{flex:1;justify-content:flex-start}
+#top #bdl{order:3;margin-left:auto}
+#top #bde{order:2}
+#top #statsMenuBtn{order:0;flex:none;margin-right:2px}
+#top .hg.right{margin-left:0;flex:none}
+@media(max-width:760px){#top .hg.d-only{flex:1 1 100%;justify-content:flex-start}#top .hg.right{margin-left:auto}#top #bdl{margin-left:auto}}
+
+/* Add-column dialog */
+.column-dialog-backdrop{position:fixed;inset:0;z-index:10000;background:rgba(8,24,42,.55);display:flex;align-items:center;justify-content:center;padding:18px}
+.column-dialog{width:min(440px,100%);background:#fff;color:#17324d;border-radius:16px;box-shadow:0 22px 70px rgba(0,0,0,.28);padding:24px;font:inherit}
+.column-dialog h3{margin:0 0 18px;font-size:20px}
+.column-dialog .field{display:flex;flex-direction:column;gap:7px;margin:14px 0}
+.column-dialog .field label{font-size:13px;font-weight:700}
+.column-dialog input[type=text],.column-dialog select{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:#17324d;font:inherit}
+.column-dialog .mandatory-choice{display:flex;align-items:center;gap:9px;margin:17px 0;font-size:14px}
+.column-dialog .dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}
+.column-dialog .dialog-actions button{border:1px solid #cbd5e1;border-radius:9px;padding:10px 15px;cursor:pointer;font:inherit;font-weight:600}
+.column-dialog .dialog-actions .primary{background:#d5a719;border-color:#d5a719;color:#132b43}
+
+
+#appLoading{position:fixed;inset:0;z-index:20000;display:none;align-items:center;justify-content:center;background:rgba(10,28,46,.42);backdrop-filter:blur(2px)}
+#appLoading.show{display:flex}
+#appLoading .loading-card{display:flex;align-items:center;gap:14px;min-width:230px;padding:18px 22px;background:#fff;border:1px solid #d9e3ee;border-radius:14px;box-shadow:0 16px 48px #071b3040;color:#173a5b;font-weight:700}
+#appLoading .spinner{width:27px;height:27px;border:3px solid #dce6f0;border-top-color:#c9a227;border-radius:50%;animation:appSpin .75s linear infinite;flex:none}
+#appLoading .loading-message{font-size:14px}
+@keyframes appSpin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){#appLoading .spinner{animation-duration:1.8s}}
+
+
+.record-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;position:sticky;top:0;background:#fff;padding:0 0 12px;margin:0 0 12px;border-bottom:1px solid #e3e8ef;z-index:2}
+.record-modal-head h2{margin:0;min-width:0;overflow-wrap:anywhere}
+.record-modal-close-top{flex:0 0 auto;white-space:nowrap;padding:7px 12px}
+
+/* Shared header layout: branding left, all header controls aligned right. */
+#top .brand{order:0;margin-right:auto!important}
+#top .hg.d-only,
+#top .hg.e-only{order:2;margin-left:auto!important;justify-content:flex-end!important;flex:0 1 auto!important}
+#top #statsMenuBtn{order:3;margin-left:0!important;margin-right:0!important}
+#top #ms{display:none!important}
+@media(max-width:760px){
+  #top .hg.d-only,
+  #top .hg.e-only{margin-left:auto!important;justify-content:flex-end!important;flex:0 1 auto!important}
+  #top #statsMenuBtn{margin-left:0!important}
+}
+
+
+/* Statistics show/hide control sits immediately before the CBSL Data Catalog title. */
+#top{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+#top #statsMenuBtn{order:0!important;flex:0 0 auto!important;margin:0 2px 0 0!important}
+#top .brand{order:1!important;margin:0 auto 0 0!important;flex:0 0 auto!important}
+#top .hg{order:2!important;margin-left:0!important;justify-content:flex-end!important}
+#top .hg.d-only,#top .hg.e-only,#top .hg.right{margin-left:auto!important}
+#top #ms{display:none!important}
+@media(max-width:760px){
+  #top .hg.d-only,#top .hg.e-only,#top .hg.right{margin-left:auto!important}
+  #top #statsMenuBtn{order:0!important}
+  #top .brand{order:1!important;margin-right:auto!important}
+}
+
+
+/* Public dashboard header: refresh beside the title; download actions at far right. */
+#top{display:flex;align-items:center;flex-wrap:nowrap;gap:10px}
+#top #statsMenuBtn{order:0!important;flex:0 0 auto!important}
+#top .brand{order:1!important;flex:0 0 auto!important;margin:0!important}
+#top #refreshDashboardBtn{order:2!important;flex:0 0 auto!important;white-space:nowrap}
+#top .hg.d-only{order:3!important;margin-left:auto!important;flex:0 0 auto!important;justify-content:flex-end!important}
+#top .hg.right{display:none!important}
+#top .hg.e-only{margin-left:auto!important;justify-content:flex-end!important}
+@media(max-width:760px){
+  #top{flex-wrap:wrap}
+  #top .hg.d-only{margin-left:auto!important}
+  #top #refreshDashboardBtn{order:2!important}
+}
+
+
+/* Data workflow information image */
+#dataWorkflowModal{position:fixed;inset:0;z-index:15000;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(5,18,32,.78)}
+#dataWorkflowModal.open{display:flex}
+#dataWorkflowModal .workflow-dialog{position:relative;width:min(1100px,96vw);max-height:92vh;overflow-y:auto;background:#fff;border-radius:14px;padding:14px;box-shadow:0 20px 60px #0006;display:flex;flex-direction:column;gap:10px}
+#dataWorkflowModal .workflow-head{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#0e2841;font-weight:700}
+#dataWorkflowModal .workflow-close{border:0;border-radius:7px;background:#eef2f7;color:#17324d;padding:7px 11px;cursor:pointer;font-size:18px}
+#dataWorkflowModal img{display:block;max-width:100%;max-height:58vh;width:auto;height:auto;object-fit:contain;margin:0 auto;flex:none}
+#dataWorkflowModal .workflow-copy{color:#263648;font-size:14px;line-height:1.6;border-top:1px solid #e2e8f0;padding:14px 6px 6px}
+#dataWorkflowModal .workflow-copy h2{margin:0 0 12px;color:#0e2841;font-size:20px}
+#dataWorkflowModal .workflow-copy p{margin:0 0 12px}
+#dataWorkflowModal .workflow-copy .footnotes{margin-top:14px;padding-top:12px;border-top:1px dashed #cbd5e1}
+#dataWorkflowModal .workflow-copy .footnotes h3{margin:0 0 6px;color:#0e2841;font-size:15px}
+#dataWorkflowModal .workflow-copy ul{margin:6px 0 0;padding-left:22px}
+#dataWorkflowModal .workflow-copy li{margin:4px 0}
+@media(max-width:650px){#dataWorkflowModal{padding:8px}#dataWorkflowModal .workflow-dialog{padding:10px;border-radius:10px}}
+
+/* Keep the workflow info icon immediately after Download, with no button chrome. */
+#top #bdl{order:99!important}
+#top #dataWorkflowBtn{order:100!important;display:inline-flex;align-items:center;justify-content:center;flex:0 0 30px;width:30px;height:30px;padding:4px;margin-left:-5px;background:transparent!important;border:0!important;border-radius:50%;box-shadow:none!important;color:#fff;cursor:pointer}
+#top #dataWorkflowBtn:hover{background:#ffffff20!important}
+#top #dataWorkflowBtn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+#top #dataWorkflowBtn .ui-icon{width:20px;height:20px;margin:0;stroke:currentColor}
+
+</style>
+</head>
+<body>
+<div id="start" style="display:none"><div class="card">
+<h2>CBSL Dataset Catalog</h2>
+<p>Select your department to start entering data.</p>
+<select id="dsel"></select>
+<button class="btn gold" id="go">Continue</button> <button class="btn alt" id="cn">Cancel</button>
+</div></div>
+
+<div id="top">
+<button class="btn d-only" id="statsMenuBtn" title="Show or hide statistics panel" aria-label="Show or hide statistics panel" aria-expanded="true">☰</button><div class="brand"><span class="logo">CBSL</span>Data Catalog</div><button class="btn gold" id="refreshDashboardBtn" type="button">↻ Refresh dashboard</button>
+<div class="hg d-only"><button class="btn gold" id="downloadTemplateBtn">⬇ Download template</button><button class="btn gold" id="bdl"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 17v3h16v-3"/></svg> Download</button><button class="btn" id="dataWorkflowBtn" type="button" title="View data workflow" aria-label="View data workflow"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" style="width:19px;height:19px;margin:0"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg></button><button class="btn gold" id="bde"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l11-11a2.1 2.1 0 0 0-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg> Data Entry</button></div>
+<div class="hg e-only"><button class="btn" id="bback">← Dashboard</button><span id="dn"></span><button class="btn" id="chg">Change department</button><button class="btn" id="imp">⬆ Import Excel</button><input type="file" id="file" accept=".xlsx" hidden><button class="btn" id="dl">⬇ Download department</button><label><input type="checkbox" id="inc" checked> reference sheets</label><span id="st"></span></div>
+<div class="hg right"><span id="ms" style="font-size:12px;opacity:.85">Connect the catalog workbook</span></div>
+</div>
+<div id="dataWorkflowModal" role="dialog" aria-modal="true" aria-labelledby="dataWorkflowTitle">
+  <div class="workflow-dialog">
+    <div class="workflow-head">
+      <span id="dataWorkflowTitle">CBSL Data Workflow</span>
+      <button type="button" class="workflow-close" id="closeDataWorkflow" aria-label="Close">×</button>
+    </div>
+    <img src="DataWorkflow.png" alt="CBSL Data Workflow" />
+    <section class="workflow-copy" aria-label="Build the Data Catalog guidance">
+      <h2>Build the Data Catalog</h2>
+      <p><strong>1. The CBSL should establish a data catalog based on the existing data inventory.</strong> The catalog should be developed in two stages. The first stage should create a practical dataset-level catalog showing what data the CBSL holds, who owns each dataset, who can access it, and what it is used for. This should be delivered quickly because it directly addresses departmental need to find existing data and reduce duplicate requests. The second stage should expand the catalog² during platform implementation.</p>
+      <div class="footnotes">
+        <h3><em>Footnotes:</em></h3>
+        <ul>
+          <li>A fuller catalog includes field-level detail (knowing what each field is, not just each dataset), data lineage (where each data point came from, so when there is a quality issue, it can be traced back), and validation rules (rules that travel with the data).</li>
+          <li>Generic Statistical Business Process Model: international framework for standardizing statistical production processes.</li>
+        </ul>
+      </div>
+      <p><strong>2. The first draft of the catalog should be built in three steps.</strong> First, the CBSL should normalize the existing inventory, agree what one catalog record represents, remove duplicates, and clean existing metadata. Second, it should complete partially filled fields, including contact point, description, division, classification, and internal shareability. Third, it should publish the catalog together with a simple request and overlap-check workflow. This work should be led by the DGU with support from departmental data stewards.</p>
+      <p><strong>3. The catalog should be paired with a simple request and overlap-check workflow.</strong> Departments should first check the catalog to see whether the data is already collected elsewhere. If no overlap is found, the Director may approve the new collection under departmental authority. If overlap is detected, the DMC should assess value versus reporting burden, with escalation to the DMOC where needed. New datasets should then be registered in the catalog with a description, classification, owner, and access level. This workflow reduces duplicate requests on external intuitions in the short-term and gives departments visibility of what is already available across the CBSL (see Data Catalog and Request Flow Diagram of Appendix 1).</p>
+    </section>
+  </div>
+</div>
+<div id="cnb" style="display:none;position:fixed;z-index:150;inset:0;background:#102a43cc;align-items:center;justify-content:center;padding:20px"><div class="card"><h2>Connect this page to the catalog folder</h2><p>Select the folder containing <b>CBSL_Data_Catalog.xlsx</b>. Because the public page and admin page are separate local HTML files, select the same folder once on each page. The dashboard will then check the workbook for updates automatically.</p><button class="btn gold" id="chooseCatalogFolder">Select catalog folder</button><p id="folderHelp" style="margin-top:12px;font-size:12px">Use Chrome or Edge. Browser security requires this folder permission; a local HTML page cannot silently scan neighbouring files.</p></div></div>
+<div id="templateModal" style="display:none;position:fixed;inset:0;z-index:120;background:#071b30a8;align-items:center;justify-content:center;padding:18px"><div class="card" style="max-height:90vh;overflow:auto"><h2>Download Excel template</h2><p>Select a department only. The Excel workbook will download immediately with that department's catalog worksheet and the reference worksheets.</p><div id="templateFields" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px"><button class="btn alt" id="cancelTemplate">Cancel</button><button class="btn gold" id="createTemplate">Download Excel workbook</button></div></div></div>
+<div id="pgE">
+<div id="previewWarning" role="alert"><strong>Important: This is a temporary data-entry session.</strong>The information you enter here is <b>not saved to the local Excel workbook or the catalog folder</b>. When you finish, download the completed Excel file and keep it. To continue editing later, import that downloaded Excel file again.</div>
+<div id="tabs"></div>
+<div id="tools"><button class="btn gold" id="saveNow">💾 Save</button><button class="btn alt" id="undoBtn" disabled>↶ Undo</button><button class="btn alt" id="redoBtn" disabled>↷ Redo</button><span id="historyStatus" aria-live="polite">All changes saved locally</span><button class="btn alt" id="ir">Insert row above</button><button class="btn alt" id="ic">Insert column</button><button class="btn alt" id="dc">Delete column</button><button class="btn alt" id="notesPanelBtn">📝 Notes</button><button class="btn alt" id="freezeBtn" title="Freeze first column and header row" aria-pressed="false">❄ Freeze</button><label>Text <input type="color" id="tc" value="#c00000"></label><label>Fill <input type="color" id="fc" value="#ffff00"></label><button class="btn alt" id="bd"><b>B</b></button><button class="btn alt" id="cl">Clear style</button></div>
+<div class="wrap" id="entry"><table id="grid"><colgroup id="cg"></colgroup><thead id="hd"></thead><tbody id="tb"></tbody></table><div id="addbar"><button class="btn gold" id="add">+ Add row</button></div></div>
+<div class="wrap" id="ref" style="display:none"></div>
+<div id="entryStatus" role="status" aria-live="polite"><span id="statusRows">Rows: 0</span><span id="statusCols">Columns: 0</span><span id="statusSaved">Last saved: —</span><span id="statusCell">Selected cell: —</span></div>
+</div>
+<div id="dash"></div>
+<div id="appLoading" role="status" aria-live="polite" aria-hidden="true"><div class="loading-card"><span class="spinner" aria-hidden="true"></span><span class="loading-message" id="appLoadingMessage">Please wait…</span></div></div>
+<div id="sg"></div>
+<div id="fh"></div>
+<div id="mod"><div class="card" id="mc"></div></div>
+<aside id="notesSidebar" aria-label="Cell notes"><div class="ns-head"><strong>Cell notes</strong><button type="button" class="btn" id="closeNotesSidebar">✕</button></div><div class="ns-content" id="notesSidebarContent"></div></aside>
+<div id="noteEditor"><label for="noteEditorText" style="font-weight:700;display:block;margin-bottom:6px">Cell note</label><textarea id="noteEditorText" placeholder="Write a note for this cell..."></textarea><div class="note-actions"><button type="button" class="btn alt" id="removeCellNote" style="margin-right:auto;display:none">Remove note</button><button type="button" class="btn alt" id="cancelCellNote">Cancel</button><button type="button" class="btn gold" id="saveCellNote">Save note</button></div></div>
+
+<script>
+const D={"title":"CBSL Dataset Catalog","cols":[["ID",1,18.0,"","A6CAEC"],["Name",1,25.0,"","A6CAEC"],["Description",1,40.0,"","A6CAEC"],["Key data fields (summary)",1,40.0,"","A6CAEC"],["Topic",1,25.0,"A","2F75B5"],["Keywords",0,28.0,"","2F75B5"],["Language",0,18.0,"B","2F75B5"],["Geographic coverage",1,18.0,"M","2F75B5"],["Temporal coverage",0,18.0,"","2F75B5"],["Frequency",1,18.0,"L","2F75B5"],["Data Basis",0,18.0,"O","2F75B5"],["Publication date",0,18.0,"","2F75B5"],["Latest update date",0,18.0,"","2F75B5"],["Methodology",0,40.0,"","2F75B5"],["Standard classification",0,18.0,"","2F75B5"],["Original source / provider",1,28.0,"","2F75B5"],["Suggested citation",0,25.0,"","2F75B5"],["URL",1,18.0,"","2F75B5"],["Department",1,18.0,"C","548235"],["Division / unit",1,18.0,"","548235"],["Data Owner",1,18.0,"","548235"],["Data Steward",1,18.0,"","548235"],["Contact Point",0,18.0,"","548235"],["Data Custodian",1,18.0,"","548235"],["Information Classification",1,18.0,"E","C65911"],["Access Type",1,18.0,"F","C65911"],["Access Group",0,25.0,"U","C65911"],["Derivation Type",0,18.0,"P","C65911"],["Contains personal data",1,18.0,"G","C65911"],["Contains sensitive personal data",1,18.0,"H","C65911"],["Sensitive Personal data category",1,18.0,"I","C65911"],["Reputational or business impact",0,18.0,"J","C65911"],["Lawful basis / legal mandate",1,25.0,"","C65911"],["License / usage rights",0,25.0,"","C65911"],["Unit-of-analysis rationale",0,40.0,"","8064A2"],["Business Function",0,18.0,"","8064A2"],["Granularity Level",1,18.0,"N","8064A2"],["Current Reports ",0,18.0,"","47D45A"],[" Downstream consumers",0,18.0,"Q","47D45A"],["Legacy / directory ID(s)",0,18.0,"","47D45A"],["Lifecycle Status",0,40.0,"","C00000"],["Retention Rule",0,28.0,"","C00000"],["Quality Status",0,28.0,"","C00000"],["Expected KPIs / metrics",0,18.0,"","C00000"],["Scheduled Update Rule",0,18.0,"","C00000"],["System of Record",1,18.0,"R","7F7F7F"],["Source system location",0,18.0,"K","7F7F7F"],["Source Format",0,40.0,"","7F7F7F"],["As-is realisation (current storage)",0,28.0,"","7F7F7F"],["Upstream Dependencies",0,18.0,"","7F7F7F"],["Data Refresh Frequency",0,18.0,"S","7F7F7F"],["Ingestion Method",0,18.0,"T","7F7F7F"],["Data Latency Requirement",0,18.0,"","E97132"],["Estimated Data Volume",0,18.0,"","E97132"],["Migration Wave",0,18.0,"","E97132"],["Target Disposition in CDPAS",0,40.0,"","E97132"],["Notes / decision log",0,18.0,"","E59EDD"]],"groups":[["Core identity",0,3,"A6CAEC","000000"],["Public discovery & publication",4,17,"2F75B5","000000"],["Ownership & Stewardship",18,23,"548235","000000"],["Governance & Access",24,33,"C65911","000000"],["Boundary & structure",34,36,"8064A2","000000"],["As-is",37,39,"47D45A","000000"],["Lifecycle, quality & use",40,44,"C00000","000000"],["As-is Realization",46,51,"7F7F7F","000000"],["Technical & migration",53,55,"E97132","000000"],["Notes & decisions",56,56,"E59EDD","000000"]],"lists":{"A":["Economy and Prices","Prices and Inflation","Real Economy and Production","National Accounts","Wholesale, Retail Trade and Domestic Commerce","Agriculture and Fisheries","Industrial Production","Construction","Property and Real Estate Markets","Transport and Logistics","Tourism","ICT and Telecommunications","Demographic, Social and Development Indicators","Labour Market and Wages","Household Welfare, Poverty and Inequality","Population and Demographics","Education and Skills","Health","Pensions and Social Protection","Gender and Inclusion","External Sector","External Sector Statistics","Exchange Rates and Foreign Exchange Market","Fiscal Sector","Government Finance","Public Debt and Government Securities","Financial and Monetary Sector","Money, Credit and Banking Aggregates","SME Finance","Monetary Policy Operations","Capital and Securities Markets","Banking Sector Supervision","Insurance and Non-Bank Financial Institutions Supervision","Financial Stability and Market Surveillance","Deposit Insurance and Resolution","Market Rates and Prices","Interest Rates","Exchange Rates","Financial Market Infrastructure","Payments, Settlements and Currency","Fintech and Digital Finance","External Market and Reference Indicators"],"B":["English","Sinhala","Tamil"],"C":["Bank Supervision Department","Center for Banking Studies","Communications   Department","Currency Department","Department of Foreign Exchange","Department of Financial Inclusion","Deposit Insurance And Resolution Department","Employees' Provident Fund Department","Economic Research Department","Financial Consumer Relations Department","Finance Department","Financial Intelligence Unit","Facilities Management Department","Governor’s Secretriat","Human Resources Department","Internal Audit Department","Investment Management Department","Information Technology Department","Legal Department","Library & Information Centre","Market Operations Department","Macroprudential Surveillance Department","Procurment Department","Policy Review & Monitoring Department","Payments And Settlements Department","Risk Management And Compliance Department","Regional Office - Anuradhapura","Regional Office - Nuwara Eliya - Ro/N","Regional Office -Trincomalee","Regional Office – Kilinochchi","Regional Office - Matale","Regional Office - Matara","Secretariat Department","Department of Supervision of Non-Bank Financial Institutions","Security Services Department","Statistics Department"],"E":["Secret","Confidential","Limited Sharing","Public"],"F":["Open Access","Shareable externally under agreement","Internal Bank-wide","Restricted Across departments (need-to-know)","Restricted Owning department only (need-to-know)","Not shareable"],"G":["Yes","No","Not applicable"],"H":["Yes","No","Not applicable"],"J":["High","Medium","Low"],"K":["Excel workbook","Delimited text","System feed / API","Database table or extract","PDF document","Word document","Scanned image or paper","Web or portal download","JSON","XML"],"L":["Daily","Business Daily","Weekly","Monthly","Quarterly","Semi-annual","Annual"],"M":["National","Province","District","Regional","International"],"N":["Item-level","Entity-level","Aggregate-level","Mixed-level"],"O":["Period-based","Event-based","Continuous","One-time","Irregular","Mixed"],"P":["Raw data (no derivation)","Derived / calculated data","Estimated data","Projected data","Mixed-type data"],"Q":["Proposed","Active","Archived","Discontinued"],"R":["On-premises","Cloud","External","Hybrid"],"S":["Automated","Semi-automated","Manual"],"T":["Real-time","Near real-time","Batch"],"I":["Offences, criminal proceedings & convictions","Biometric data","Location identifier","Health data","Genetic data","Racial or ethnic origin","Political opinions","Religious or philosophical beliefs","Other special category"],"U":["All CBSL Staff","Specific Departments","Specific Individuals","Other"]},"lref":{"A":"$A$2:$A$43","B":"$B$2:$B$4","C":"$C$2:$C$37","E":"$E$2:$E$5","F":"$F$2:$F$7","G":"$G$2:$G$4","H":"$H$2:$H$4","J":"$J$2:$J$4","K":"$K$2:$K$11","L":"$L$2:$L$8","M":"$M$2:$M$6","N":"$N$2:$N$5","O":"$O$2:$O$7","P":"$P$2:$P$6","Q":"$Q$2:$Q$5","R":"$R$2:$R$5","S":"$S$2:$S$4","T":"$T$2:$T$4","I":"$I$2:$I$10","U":"$U$2:$U$5"},"depts":[["Bank Supervision Department","BSD"],["Center for Banking Studies","CBS"],["Communications   Department","COD"],["Currency Department","CUD"],["Department of Foreign Exchange","DFE"],["Department of Financial Inclusion","DFI"],["Deposit Insurance And Resolution Department","DIRD"],["Employees' Provident Fund Department","EPF"],["Economic Research Department","ERD"],["Financial Consumer Relations Department","FCRD"],["Finance Department","FD"],["Financial Intelligence Unit","FIU"],["Facilities Management Department","FMD"],["Governor’s Secretriat","GS"],["Human Resources Department","HRD"],["Internal Audit Department","IAD"],["Investment Management Department","IMD"],["Information Technology Department","ITD"],["Legal Department","LD"],["Library & Information Centre","LIC"],["Market Operations Department","MOD"],["Macroprudential Surveillance Department","MSD"],["Procurment Department","PD"],["Policy Review & Monitoring Department","PRMD"],["Payments And Settlements Department","PASD"],["Risk Management And Compliance Department","RMACD"],["Regional Office - Anuradhapura",""],["Regional Office - Nuwara Eliya - Ro/N",""],["Regional Office -Trincomalee",""],["Regional Office – Kilinochchi",""],["Regional Office - Matale",""],["Regional Office - Matara",""],["Secretariat Department","SD"],["Department of Supervision of Non-Bank Financial Institutions","SNBFI"],["Security Services Department","SSD"],["Statistics Department","STD"]],"refs":{"Validation Codelists":{"w":[28.0,12,12,28.0,28.0,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,28.0],"m":[],"r":[[["Topic",1,""],["Language",1,""],["Department",1,""],["ID_Codelist",1,""],["Information Classification",1,""],["Access and Sharing Level",1,""],["Contains personal data",1,""],["Contains sensitive personal data",1,""],["Personal data category",1,""],["Reputational or business impact",1,""],["Source Format",1,""],["Frequency",1,""],["Geographic coverage",1,""],["Granularity Level",1,""],["Data Basis",1,""],["Derivation Type",1,""],["Lifecycle Status",1,""],["Source system location",1,""],["Ingestion Method",1,""],["Data Latency Requirement",1,""],["Access Group",1,""]],[["Economy and Prices",0,""],["English",0,""],["Bank Supervision Department",0,""],["BSD",0,""],["Secret",0,""],["Open Access",0,""],["Yes",0,""],["Yes",0,""],["Offences, criminal proceedings & convictions",0,""],["High",0,""],["Excel workbook",0,""],["Daily",0,""],["National",0,""],["Item-level",0,""],["Period-based",0,""],["Raw data (no derivation)",0,""],["Proposed",0,""],["On-premises",0,""],["Automated",0,""],["Real-time",0,""],["All CBSL Staff",0,""]],[["Prices and Inflation",0,""],["Sinhala",0,""],["Center for Banking Studies",0,""],["CBS",0,""],["Confidential",0,""],["Shareable externally under agreement",0,""],["No",0,""],["No",0,""],["Biometric data",0,""],["Medium",0,""],["Delimited text",0,""],["Business Daily",0,""],["Province",0,""],["Entity-level",0,""],["Event-based",0,""],["Derived / calculated data",0,""],["Active",0,""],["Cloud",0,""],["Semi-automated",0,""],["Near real-time",0,""],["Specific Departments",0,""]],[["Real Economy and Production",0,""],["Tamil",0,""],["Communications   Department",0,""],["COD",0,""],["Limited Sharing",0,""],["Internal Bank-wide",0,""],["Not applicable",0,""],["Not applicable",0,""],["Location identifier",0,""],["Low",0,""],["System feed / API",0,""],["Weekly",0,""],["District",0,""],["Aggregate-level",0,""],["Continuous",0,""],["Estimated data",0,""],["Archived",0,""],["External",0,""],["Manual",0,""],["Batch",0,""],["Specific Individuals",0,""]],[["National Accounts",0,""],[null,0,""],["Currency Department",0,""],["CUD",0,""],["Public",0,""],["Restricted Across departments (need-to-know)",0,""],[null,0,""],[null,0,""],["Health data",0,""],[null,0,""],["Database table or extract",0,""],["Monthly",0,""],["Regional",0,""],["Mixed-level",0,""],["One-time",0,""],["Projected data",0,""],["Discontinued",0,""],["Hybrid",0,""],[null,0,""],[null,0,""],["Other",0,""]],[["Wholesale, Retail Trade and Domestic Commerce",0,""],[null,0,""],["Department of Foreign Exchange",0,""],["DFE",0,""],[null,0,""],["Restricted Owning department only (need-to-know)",0,""],[null,0,""],[null,0,""],["Genetic data",0,""],[null,0,""],["PDF document",0,""],["Quarterly",0,""],["International",0,""],[null,0,""],["Irregular",0,""],["Mixed-type data",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Agriculture and Fisheries",0,""],[null,0,""],["Department of Financial Inclusion",0,""],["DFI",0,""],[null,0,""],["Not shareable",0,""],[null,0,""],[null,0,""],["Racial or ethnic origin",0,""],[null,0,""],["Word document",0,""],["Semi-annual",0,""],[null,0,""],[null,0,""],["Mixed",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Industrial Production",0,""],[null,0,""],["Deposit Insurance And Resolution Department",0,""],["DIRD",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],["Political opinions",0,""],[null,0,""],["Scanned image or paper",0,""],["Annual",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Construction",0,""],[null,0,""],["Employees' Provident Fund Department",0,""],["EPF",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],["Religious or philosophical beliefs",0,""],[null,0,""],["Web or portal download",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Property and Real Estate Markets",0,""],[null,0,""],["Economic Research Department",0,""],["ERD",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],["Other special category",0,""],[null,0,""],["JSON",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Transport and Logistics",0,""],[null,0,""],["Financial Consumer Relations Department",0,""],["FCRD",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],["XML",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Tourism",0,""],[null,0,""],["Finance Department",0,""],["FD",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["ICT and Telecommunications",0,""],[null,0,""],["Financial Intelligence Unit",0,""],["FIU",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Demographic, Social and Development Indicators",0,""],[null,0,""],["Facilities Management Department",0,""],["FMD",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Labour Market and Wages",0,""],[null,0,""],["Governor’s Secretriat",0,""],["GS",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Household Welfare, Poverty and Inequality",0,""],[null,0,""],["Human Resources Department",0,""],["HRD",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Population and Demographics",0,""],[null,0,""],["Internal Audit Department",0,""],["IAD",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Education and Skills",0,""],[null,0,""],["Investment Management Department",0,""],["IMD",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Health",0,""],[null,0,""],["Information Technology Department",0,""],["ITD",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Pensions and Social Protection",0,""],[null,0,""],["Legal Department",0,""],["LD",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Gender and Inclusion",0,""],[null,0,""],["Library & Information Centre",0,""],["LIC",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["External Sector",0,""],[null,0,""],["Market Operations Department",0,""],["MOD",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["External Sector Statistics",0,""],[null,0,""],["Macroprudential Surveillance Department",0,""],["MSD",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Exchange Rates and Foreign Exchange Market",0,""],[null,0,""],["Procurment Department",0,""],["PD",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Fiscal Sector",0,""],[null,0,""],["Policy Review & Monitoring Department",0,""],["PRMD",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Government Finance",0,""],[null,0,""],["Payments And Settlements Department",0,""],["PASD",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Public Debt and Government Securities",0,""],[null,0,""],["Risk Management And Compliance Department",0,""],["RMACD",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Financial and Monetary Sector",0,""],[null,0,""],["Regional Office - Anuradhapura",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Money, Credit and Banking Aggregates",0,""],[null,0,""],["Regional Office - Nuwara Eliya - Ro/N",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["SME Finance",0,""],[null,0,""],["Regional Office -Trincomalee",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Monetary Policy Operations",0,""],[null,0,""],["Regional Office – Kilinochchi",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Capital and Securities Markets",0,""],[null,0,""],["Regional Office - Matale",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Banking Sector Supervision",0,""],[null,0,""],["Regional Office - Matara",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Insurance and Non-Bank Financial Institutions Supervision",0,""],[null,0,""],["Secretariat Department",0,""],["SD",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Financial Stability and Market Surveillance",0,""],[null,0,""],["Department of Supervision of Non-Bank Financial Institutions",0,""],["SNBFI",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Deposit Insurance and Resolution",0,""],[null,0,""],["Security Services Department",0,""],["SSD",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Market Rates and Prices",0,""],[null,0,""],["Statistics Department",0,""],["STD",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Interest Rates",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Exchange Rates",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Financial Market Infrastructure",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Payments, Settlements and Currency",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Fintech and Digital Finance",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["External Market and Reference Indicators",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]]]},"Field Definitions":{"w":[42.0,12.0,90.0],"m":[],"r":[[["Field",1,"305496"],["Status",1,"305496"],["Definition",1,"305496"]],[["ID",0,""],["Mandatory",0,""],["Unique identifier for the dataset or governed data asset.",0,""]],[["Name",0,""],["Mandatory",0,""],["A name given to the resource.",0,""]],[["Topic",0,""],["Mandatory",0,""],["High-level categorisation of the dataset’s subject matter.",0,""]],[["Description",0,""],["Mandatory",0,""],["Brief explanation of what the dataset contains and why it exists.",0,""]],[["Unit-of-analysis rationale",0,""],["Rationale",0,""],["Why this is one governed dataset — the boundary decision from the reconciliation (one business function, same organizing fields, consistent grain/frequency, single governance).",0,""]],[["Keywords",0,""],["Core",0,""],["Searchable terms for discovery and faceted search.",0,""]],[["Key data fields (summary)",0,""],["Mandatory",0,""],["Comma-separated principal fields; quick schema visibility without a full dictionary.",0,""]],[["Language",0,""],["Optional",0,""],["Primary language of the dataset’s content.",0,""]],[["Department",0,""],["Mandatory",0,""],["Department responsible for the dataset.",0,""]],[["Division / unit",0,""],["Mandatory",0,""],["Division/unit accountable for creation, maintenance and dissemination.",0,""]],[["Data Owner",0,""],["Mandatory",0,""],["Manager accountable for the dataset and approval decisions.",0,""]],[["Data Steward",0,""],["Mandatory",0,""],["Officer responsible for day-to-day metadata, quality and coordination.",0,""]],[["Data custodian",0,""],["Core",0,""],["Technical Owner (IT Contact).",0,""]],[["Contact Point",0,""],["Core",0,""],["Primary individual/group handling inquiries about the resource.",0,""]],[["Original source / provider",0,""],["Mandatory",0,""],["Entity responsible for producing or collecting the original data.",0,""]],[["System of record",0,""],["Mandatory",0,""],["System/repository from which the governed version is sourced.",0,""]],[["Source system location",0,""],["Core",0,""],["On-premises, cloud or external.",0,""]],[["Source format",0,""],["Core",0,""],["Format version of the described resource.",0,""]],[["Upstream dependencies",0,""],["Core",0,""],["Key external/internal systems, feeds or manual inputs required.",0,""]],[["Geographic coverage",0,""],["Core",0,""],["Geographic area covered by the data.",0,""]],[["Temporal coverage",0,""],["Core",0,""],["Temporal coverage (ISO 8601, e.g. 1997/2009).",0,""]],[["Granularity",0,""],["Core",0,""],["Level of detail represented in the dataset.",0,""]],[["Frequency",0,""],["Mandatory",0,""],["Time interval at which observations occur.",0,""]],[["Publication date",0,""],["Core",0,""],["Date formally issued/released (distinct from update date).",0,""]],[["Scheduled update day",0,""],["Core",0,""],["Expected submission or refresh timing.",0,""]],[["Update date",0,""],["Core",0,""],["Most recent date the resource was modified/updated.",0,""]],[["Derivation Type",0,""],["Core",0,""],["Method used to derive a new element/indicator from source data.",0,""]],[["Methodology",0,""],["Optional",0,""],["Statistical framework, methods and adjustments used to produce the dataset.",0,""]],[["Standard classification",0,""],["Optional",0,""],["Standard classifications applied (e.g. ISIC, COICOP).",0,""]],[["Classification",0,""],["Mandatory",0,""],["Sensitivity class used to determine handling and access.",0,""]],[["Internal shareability / Access and Sharing Level",0,""],["Mandatory",0,""],["Whether and under what conditions the dataset may be shared inside CBSL.",0,""]],[["Personal data / sensitive fields indicator",0,""],["Core",0,""],["Flags whether personal or specially sensitive data is present.",0,""]],[["Lawful basis / legal mandate",0,""],["Mandatory",0,""],["Legal or regulatory reason for collecting or using the data.",0,""]],[["License / usage rights",0,""],["Optional",0,""],["Licence or usage terms governing distribution and reuse (distinct from lawful basis).",0,""]],[["Reputational or business impact",0,""],["Core",0,""],["Risk if the data were exposed or misused.",0,""]],[["Access model / entitlement group",0,""],["Optional",0,""],["Who should be able to use the dataset",0,""]],[["Lifecycle status",0,""],["Core",0,""],["Current state in the governance lifecycle.",0,""]],[["Retention rule",0,""],["Mandatory",0,""],["How long to retain and when to archive/dispose.",0,""]],[["Quality status / known issues",0,""],["Core",0,""],["High-level data-quality readiness and open issues.",0,""]],[["Current reports / downstream consumers",0,""],["Core",0,""],["Reports/dashboards/processes that consume this dataset.",0,""]],[["Expected KPIs / metrics",0,""],["Core",0,""],["KPIs/metrics this dataset is expected to support.",0,""]],[["Data latency requirement",0,""],["Core",0,""],["Acceptable delay between generation and availability (batch vs real-time).",0,""]],[["Estimated data volume",0,""],["Core",0,""],["Estimated size (GB/TB) for storage/migration sizing.",0,""]],[["Migration wave",0,""],["Core",0,""],["Indicative implementation wave/sequencing bucket.",0,""]],[["Target disposition in CDPAS",0,""],["Mandatory",0,""],["Expected target state for the asset.",0,""]],[["Suggested citation",0,""],["Optional",0,""],["Recommended citation format for referencing the dataset.",0,""]],[["Notes / decision log",0,""],["Optional",0,""],["Free-text decision or caveat captured during workshop.",0,""]]]},"Boundary Criteria":{"w":[4.0,26.0,72.0,52.0],"m":["A17:D17","A18:D18","A16:D16"],"r":[[["Dataset boundary criteria — final",1,""],[null,0,""],[null,0,""],[null,0,""]],[["Nine criteria for deciding what is one dataset, stress-tested against the inventory. Each carries the dataset examples used to test it.",0,""],[null,0,""],[null,0,""],[null,0,""]],[[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["#",1,"305496"],["Criterion",1,"305496"],["Definition",1,"305496"],["Dataset examples used for testing",1,"305496"]],[["1",0,""],["One primary business function",1,""],["A dataset serves a single business function. Where the data spans functions, split along the function boundary.",0,""],["DIRD-001/002/003 — one deposit-insurance family, three datasets by grain, one function each. CSE market data vs CDS depository activity — different functions (and sources), separate datasets.",0,""]],[["2",0,""],["Same core organizing fields",1,""],["A dataset shares the same core organizing fields/dimensions, such as institution, sector, instrument, geography, time. Same fields is necessary but not sufficient — identical fields over different populations are still separate datasets (see criterion 9).",0,""],["DIRD-003 — institution × period are the core fields; bank type and payment timeliness are attributes, not extra organizing fields, so the four form variants stay one dataset.",0,""]],[["3",0,""],["Consistent granularity",1,""],["A dataset has a consistent level of detail. If a more detailed breakdown still adds up to the same totals, keep it as one dataset and just record the breakdown. Split when the measures themselves differ across levels.",0,""],["Keep together: DIRD-002 — the range breakdown sums to the institution total; MSD sector-wise index folds into the daily market data. Split: company-wise Daily Share Price list — share prices are different measures that do not sum to an index.",0,""]],[["4",0,""],["Consistent frequency",1,""],["Frequency is a boundary only when the underlying observation process differs. If the same process produces both daily and monthly outputs, keep them together (one dataset). If the observation process itself is different, split.",0,""],["Keep together: ERD-04 — monthly average and end-period spot rates, one observation process. Split: ERD-05 (monthly EER-24, quarter lag) vs ERD-06 (daily EER) — different compilation processes.",0,""]],[["5",0,""],["Single governance & legal basis",1,""],["Single governance and legal basis. Where the same data carries different legal bases, that is a clear dataset boundary.",0,""],["NBS AML/CFT cluster (FIU legal basis, restricted) kept separate from statistical datasets; ERD-03 embargo shows classification changing at release under ONE legal basis — a lifecycle rule, not a boundary.",0,""]],[["6",0,""],["Canonical ownership (consumed vs owned)",1,""],["A dataset is governed once by its owning department; other departments link as consumers rather than re-cataloguing. The “is this ours or consumed?” question precedes the other tests when reviewing the inventory.",0,""],["CRIB data held by two departments → one canonical owner, others consume. Premium return listed five times in the inventory → one governed dataset (DIRD-003).",0,""]],[["7",0,""],["Methodological continuity",1,""],["A change of base period, classification or methodology that leaves the fields unchanged still creates a NEW or VERSIONED dataset.",0,""],["Price and trade indices on rebasing (new base year, same fields) — versioned dataset, not silent continuation; series before/after are not comparable without the version marker.",0,""]],[["8",0,""],["Supply-chain layer",1,""],["Distinguish the supply-chain layer (raw source → curated/submitted → published/derived). Always catalog the governed version; however, you could catalog a raw-source layer as its own dataset only when it is independently used or requested. Otherwise capture the raw source and the curation rules as lineage on the governed dataset (see System of record, Source system location, Upstream dependencies). Migration needs a fuller raw data inventory but we should keep that separate from the published catalog.",0,""],["ERD-04 — monthly spot rates derived from an underlying daily series (lineage, not a second catalog entry unless independently used). DIRD-002 derivable from the DIRD-001 register — recorded as derived-from lineage. SNBFI/STAT submitted vs published layers.",0,""]],[["9",0,""],["Same population & coverage",1,""],["A dataset measures one population or reference universe — same coverage, same basket or codelist behind the rows. If the same fields are collected over different populations, these are sibling datasets, not one dataset: neither adds up to the other, and each carries its own coverage, codelist and publication schedule — split. But if the universe is just a clean code on otherwise identical rows (same frequency, schedule, classification), keep one dataset and record it as a dimension. The test: does the universe drag other differences with it? Split. Is it just a code? Dimension.",0,""],["Split: STAT-001 (CCPI, owned by STAT, consumed by ERD, Colombo basket) vs STAT-002 (NCPI, national basket) — same fields, different baskets, coverage and publication dates. Merge: ERD-06 — 5- and 10-currency EER baskets differ only by basket → one dataset, basket as a dimension.",0,""]],[[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Footnotes",1,""],[null,0,""],[null,0,""],[null,0,""]],[["Scope — case / evidence data: SNBFI investigation and forensic-evidence material is governed as CASE records (workflow/records management), not as statistical datasets; it sits outside these criteria and this catalog, with only a pointer from the owning department.",0,""],[null,0,""],[null,0,""],[null,0,""]],[["Measure semantics (stock vs flow): folded into criterion 3 — ‘measures themselves differ across levels’ includes a stock reported alongside flows (e.g. units in commercial operation, as-at-end, vs monthly approvals): same dataset when the grain holds, but never summed together; record the semantics per measure in the dictionary.",0,""],[null,0,""],[null,0,""],[null,0,""]],[["Shared users: dropped as a boundary test — in practice it never decided a boundary on its own; user overlap is captured instead under Access model / downstream consumers in the metadata.",0,""],[null,0,""],[null,0,""],[null,0,""]]]},"Summary & Notes":{"w":[3.0,34.0,120.0,10.0,70.0],"m":[],"r":[[[null,0,""],["CBSL Dataset Catalog — Summary & Notes",1,""],[null,0,""],[null,0,""],[null,0,""]],[[null,0,""],["Governed dataset catalog and field dictionaries derived from reconciling the Data Directory (as-is inventory) with the Data Requirements (target capture), under the Cover-Sheet definition of a dataset.",0,""],[null,0,""],[null,0,""],[null,0,""]],[[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[[null,0,""],["Dataset definition",1,"305496"],[null,0,"305496"],[null,0,""],[null,0,""]],[[null,0,""],["Definition",1,""],["A dataset is an identifiable collection of related data, managed and accessed as a single unit under one owner, and described by metadata that supports its discovery and reuse.",1,""],[null,0,""],[null,0,""]],[[null,0,""],["Note",1,""],["The definition says WHAT a dataset is; the boundary criteria (function, grain, observation frequency, single owner) decide WHERE one ends. “Under one owner” is the operative phrase — the same data is governed once by its owner; others link as consumers.",0,""],[null,0,""],[null,0,""]],[[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[[null,0,""],["What this workbook contains",1,"305496"],[null,0,"305496"],[null,0,""],[null,0,""]],[[null,0,""],["Summary & Notes",1,""],["This page — methodology, findings, decisions and open actions.",0,""],[null,0,""],[null,0,""]],[[null,0,""],["Dataset Catalog",1,""],["The dataset-level records (one row per governed dataset) on the agreed schema. Header colour = field status (dark = Mandatory, medium = Core, light = Optional, green = unit-of-analysis rationale). Blank cells = value not yet found in source files.",0,""],[null,0,""],[null,0,""]],[[null,0,""],["Data Dictionaries",1,""],["Field-level detail for the datasets where source field lists exist (10 datasets, 116 fields). Field Role = Key / Dimension / Measure / Attribute / Metadata; conditional fields and PII flagged.",0,""],[null,0,""],[null,0,""]],[[null,0,""],["Field reference",1,""],["The schema — every field with its status and definition.",0,""],[null,0,""],[null,0,""]],[[null,0,""],["Companion file",1,""],["A separate reconciliation workbook holds the per-department boundary decisions (one sheet each for DIRD, PSD, MSD, MOD/PDMO, BSD, SNBFI/NBS, STAT, EPF) with the rationale, quality flags and open questions behind each catalog entry.",0,""],[null,0,""],[null,0,""]],[[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[[null,0,""],["Unit of analysis — definition and the rule that settled it",1,"305496"],[null,0,"305496"],[null,0,""],[null,0,""]],[[null,0,""],["Definition",1,""],["A dataset = the lowest consistent observation level governed as one entity. Tests: one business function; same core organizing fields; consistent granularity; consistent frequency; shared users; single governance & legal basis.",0,""],[null,0,""],[null,0,""]],[[null,0,""],["Reusable rule",1,""],["The single rule that resolved most boundary questions: USE A DIMENSION when the aggregate is the clean SUM of the finer grain; SPLIT when the measures themselves differ across levels. (It separated CSE sector-wise = dimension from MOD bank-wise liquidity = split, and BSD credit-classification vs exposures = split.)",0,""],[null,0,""],[null,0,""]],[[null,0,""],["Conditional fields",1,""],["Where field differences are fully explained by a dimension (e.g. premium Capital Adequacy Ratio for banks only, penalties for late payments only), they are conditional fields of ONE dataset — not separate datasets.",0,""],[null,0,""],[null,0,""]],[[null,0,""],["Stock vs flow",1,""],["Different measure semantics (end-period stock vs period flow, e.g. ATM machine counts vs transaction volume/value) live in one dataset when on the same return at the same frequency — documented for aggregation, not split.",0,""],[null,0,""],[null,0,""]],[[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[[null,0,""],["Department-by-department findings",1,"305496"],[null,0,"305496"],[null,0,""],[null,0,""]],[[null,0,""],["Department",1,"5B9BD5"],["Shape of the two files",1,"5B9BD5"],["Datasets",1,"5B9BD5"],["Key decision",1,"5B9BD5"]],[[null,0,""],["DIRD",0,""],["Requirements duplicates internally and mixes two functions (deposit insurance + resolution).",0,""],["4",0,""],["Register / claims (REDClaim) / premium split; resolution inputs re-homed to BSD/SNBFI/IMD.",0,""]],[[null,0,""],["PSD",0,""],["Directory carries the field detail; Requirements duplicates per line.",0,""],["9",0,""],["ATM stock + flow on one quarterly return = one dataset; switches split by cadence (RTGS monthly, LankaRTGS daily).",0,""]],[[null,0,""],["MSD",0,""],["Requirements OVER-represents (98 vs 59) and consumes large MOD/PDMO data.",0,""],["16",0,""],["CSE widened to all 19 daily measures; reference indicators split by frequency; money-market/forex/govt-securities re-homed to MOD/PDMO.",0,""]],[[null,0,""],["MOD / PDMO",0,""],["Requirements UNDER-represents (8 vs 28 Directory items).",0,""],["7",0,""],["Policy parameters = one effective-dated dataset; liquidity split national vs bank-wise. Gaps: PDMO (no sheet) and MOD DFX (empty).",0,""]],[[null,0,""],["BSD",0,""],["Mirrors SNBFI — Directory returns vs FINNET source feeds.",0,""],["8",0,""],["Credit classification vs exposures split; liquidity uniform monthly = one dataset; EWI captured (BSD-DF-01).",0,""]],[[null,0,""],["SNBFI",0,""],["The two files describe OPPOSITE ends of the supply chain (submitted returns vs raw source ingestion).",0,""],["25",0,""],["306 Directory items collapse to ~5 returns via district/product/sector dimensions; investigations/KYC = restricted evidence class; external registries consumed.",0,""]],[[null,0,""],["STAT",0,""],["Requirements-only — no Directory presence at all.",0,""],["135",0,""],["Base-year variants separate; index+raw as one dataset with lineage; ESS = one dataset per coherent-grain table (131 tables).",0,""]],[[null,0,""],["EPF",0,""],["Standalone fund; already a clean model.",0,""],["5",0,""],["Two registries + three transaction datasets; no consolidation needed; mid-migration EPFSYS → LCP.",0,""]],[[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[[null,0,""],["Open actions (not dataset decisions — things to collect or fix)",1,"305496"],[null,0,"305496"],[null,0,""],[null,0,""]],[[null,0,""],[null,0,""],["•  PDMO public-debt data has no requirement sheet — stand up a capture (issuance, outstanding stock, secondary yields, foreign holdings).",0,""],[null,0,""],[null,0,""]],[[null,0,""],[null,0,""],["•  MOD DFX (forex) sheet is empty — populate from MSD’s re-homed forex rows; then set forex dataset boundaries.",0,""],[null,0,""],[null,0,""]],[[null,0,""],[null,0,""],["•  STAT and EPF are not in the Directory — add them (Directory coverage gap).",0,""],[null,0,""],[null,0,""]],[[null,0,""],[null,0,""],["•  CRIB and CSE/CDS appear in both MSD and SNBFI — dedupe to a single canonical source; link other departments as consumers.",0,""],[null,0,""],[null,0,""]],[[null,0,""],[null,0,""],["•  Requirements “Update Frequency” is corrupted for MSD (712/740 rows = “Automation rate”) — re-collect frequency.",0,""],[null,0,""],[null,0,""]],[[null,0,""],[null,0,""],["•  Mandatory schema fields still blank for many rows — especially Data Steward and Retention rule — collect from dataset owners.",0,""],[null,0,""],[null,0,""]],[[null,0,""],[null,0,""],["•  ESS (131) and FC source-module rows are populated at name level; per-table grain, fields and ownership get filled once STAT/FC schemas are collected.",0,""],[null,0,""],[null,0,""]],[[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[[null,0,""],["How to use this catalog",1,"305496"],[null,0,"305496"],[null,0,""],[null,0,""]],[[null,0,""],[null,0,""],["•  Each Dataset Catalog row is the governed dataset; its Unit-of-analysis rationale records why it is one dataset.",0,""],[null,0,""],[null,0,""]],[[null,0,""],[null,0,""],["•  Field-level detail for a Dataset ID lives in Data Dictionaries (built for 10 datasets so far; same template for the rest).",0,""],[null,0,""],[null,0,""]],[[null,0,""],[null,0,""],["•  Boundary decisions and the evidence behind them are in the companion reconciliation workbook.",0,""],[null,0,""],[null,0,""]],[[null,0,""],[null,0,""],["•  Counts: 212 governed datasets catalogued; 116 dictionary fields across 10 datasets.",0,""],[null,0,""],[null,0,""]],[[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["TWO LAYERS — HOW TO USE THIS CATALOG",1,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Two layers",1,""],["Each catalog row is a GOVERNED DATASET (logical: one function, one grain, one owner). Its ‘As-is realisation’ column lists the PHYSICAL objects holding that data today (forms, files, systems). Merging rows changes nothing on disk — physical reality lives in the realisation column.",0,""],[null,0,""],[null,0,""],[null,0,""]],[["Duplication check (as-is)",1,""],["Check new return requests against the GOVERNED layer — ‘does this data already exist anywhere, in any form?’ The rationalised view reveals duplicates that physical fragmentation hides.",0,""],[null,0,""],[null,0,""],[null,0,""]],[["Migration (to-be)",1,""],["The mapping ‘as-is realisation → governed dataset’ IS the migration spec: realisation = source inventory; governed dataset = target structure.",0,""],[null,0,""],[null,0,""],[null,0,""]],[["Guardrail",1,""],["Rationalise only what the source evidence forces (merge variants, split diverging grains, dedup demonstrated duplicates — each decision cited). Designing NEW collections is target-state platform work — separate document, never these rows.",0,""],[null,0,""],[null,0,""],[null,0,""]],[["Dictionary rule",1,""],["One dictionary, three statuses: ‘Confirmed — as-is, carried forward’ · ‘Proposed — to-be only’ · ‘As-is only — not carried forward’. Every as-is field appears in exactly one row; filter by status to read as-is check vs target spec.",0,""],[null,0,""],[null,0,""],[null,0,""]],[[null,0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["BACKFILL PROVENANCE (dates & names review)",1,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Names: the six datasets appended from the ERD review were missing Name/Description due to an integration mapping error — repaired from the review file.",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["Green cells were backfilled from the two source files: Descriptions, System of record, Data Owner (Business), Source Type and Source System Location from Data_Requirement; Division, Contact Point, Source, Format, Geographic/Temporal coverage, Frequency, Scheduled update day, Data last updated and Reputational impact from Data_Directory (matched by name/legacy code; multi-item roll-ups take the union of temporal coverage).",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]],[["STRUCTURAL GAPS — not fillable from sources: the Directory has NO sheet for STAT or EPF, so Temporal coverage / Scheduled update day / Update date cannot be sourced for those rows (the bulk of remaining blanks) and must be collected from the owning departments. Publication date, Data Steward, Retention, KPIs and citation fields exist in neither source — rollout items for owners.",0,""],[null,0,""],[null,0,""],[null,0,""],[null,0,""]]]}}};
+// Authoritative department/division master imported from CBSL Depts n Divisions.xlsx.
+D.deptDivisionMap={"Governor’s Secretriat":{"code":"GSD","dept_code":46,"divisions":["Governor's Protocol Division","Governor's Office Front Desk","Governor's Office Security Desk"]},"Deputy Governors' Offices":{"code":"","dept_code":null,"divisions":[]},"Assistant Governors' Offices":{"code":"","dept_code":null,"divisions":[]},"Board Secretariat (Governing Board)":{"code":"","dept_code":null,"divisions":[]},"Office of The International Monetary Fund":{"code":"","dept_code":null,"divisions":[]},"Monetary Policy Board Secretariat":{"code":"","dept_code":null,"divisions":[]},"Bank Supervision Department":{"code":"BSD","dept_code":2,"divisions":["Banking Policy (BP)","Continuous Supervision (CS)","Financial Analysis Unit (FAU)","Examination (EX)","AML / CFT Supervision","Corporate Services (CO)"]},"Center for Banking Studies":{"code":"CBS","dept_code":17,"divisions":["Corporate Services Division","Program Division","Accounts Division","Staff Training Division","Security Services"]},"Communications   Department":{"code":"CMD","dept_code":15,"divisions":["Administration & Publications","Awareness Division (Internal/External awareness and Publications)","Media Division (Print & Digital Media)","Content Development Unit (CDU)","Sinhala Translations Unit","Tamil Translations Unit","Publication Sales Counter (Central Point Building)"]},"Currency Department":{"code":"CRD","dept_code":12,"divisions":["Administration Division","Accounts Division","Currency Management Division","Currency Issues Division","Currency Deposits Division","Currency Verification & Destruction Division","Currency Verification & Currency Sorting Division","Counters, Regulation “E” & Counterfeit Examination Division","Main Vaults","Economic History Museum (Central Point Building)"]},"Department of Supervision of Non-Bank Financial Institutions":{"code":"SNBFI","dept_code":24,"divisions":["Administration Division","Off-Site Surveillance - Division","On-site Examination Division","Policy Division","Data Base & Internal Rating Unit","Primary Dealer Supervision Division","Micro Finance Division","Investigation Division","AMLCFT Supervision Unit"]},"Department of Foreign Exchange":{"code":"DFE","dept_code":66,"divisions":["Transaction and Advisory Division","Policy and Development Division","Legal and Enforcement Division","Corporate Services Division","Database and Statistics Division","Monitoring and Supervision Division"]},"Department of Financial Inclusion":{"code":"DFI","dept_code":32,"divisions":["Project Finance & Strategic Plan Monitoring","Financial Inclusion & Policy","Regional Offices & Corporate Services"]},"Deposit Insurance And Resolution Department":{"code":"DIRD","dept_code":67,"divisions":["Policy, Planning & Compliance Monitoring Division","Accounts, Investments & Administration Division","Resolution Division","Payouts Division","Database Division","Corporate Services Division","Communication & Procurements of Financial Sector Safety Net Strengthening (FSSNP)","Project Implementation Unit of the FSSNP"]},"Economic Research Department":{"code":"ERD","dept_code":3,"divisions":["Administration Division","Money and Banking Division","Modelling and Forecasting Division","Balance of Payments and International Relations Division","Public Finance Division","Real Sector Division"]},"Employees' Provident Fund Department":{"code":"EPF","dept_code":4,"divisions":["Dealing Unit/Front Office (FO)","Portfolio Management Unit (PMU)","Middle Office (MO)","Back Office (BO)","Corporate Services & Administration Division (CSAD)","Accounts & Reconciliation Division (ARD)","Current Contribution Division (CCD)","Process Improvement and Capacity Development Division (PICDD)","Housing Loan Division (HLD)","Refund Payment Division (RPD)","Refund Control Division (RCD)","Record Management Division (RMD)","E-Collection Division (ECD)","Record Amendments Division (RAD)","Re-Registration Division (RRD)","Collection Division (CLD)","Public Relations and Inquiries Counter (PRIC)","Information Technology (IT) Division"]},"Facilities Management Department":{"code":"FMD","dept_code":14,"divisions":["Administration Division","Transport Division","Engineering Division","Maintenance Division"]},"Finance Department":{"code":"FD","dept_code":36,"divisions":["Accounts Payable and Budget Division","Administration Division","Foreign Finance Division","Salaries & Welfare Accounts Division","Superannuation Division","GL Administration Division"]},"Financial Consumer Relations Department":{"code":"FCRD","dept_code":68,"divisions":["Public Relations and Complaint Handling Division","Policy Division","Market Conduct Supervision Division","Investigation on Prohibited Pyramid Scheme Division","Corporate Services & Administration Division"]},"Financial Intelligence Unit":{"code":"FIU","dept_code":37,"divisions":["Corporate Services Division","Legal & Policy Division","International Relations Division","Intelligence Management Division","Intelligence Analysis Division (ML & TF)","Financial Data Management Division","Supervision Division 1","Supervision Division 2","Project Office"]},"Human Resources Department":{"code":"HRD","dept_code":5,"divisions":["HR Strategies Revamping Project Office"]},"Internal Audit Department":{"code":"IAD","dept_code":7,"divisions":["Administration Division","Risk Based Process and Information System Audit Division","Quality Assurance & Improvement Division"]},"Information Technology Department":{"code":"ITD","dept_code":10,"divisions":["Administration Division","Systems Development & Maintenance Division","IT Infrastructure Management","IT Help Desk"]},"Investment Management Department":{"code":"IMD","dept_code":71,"divisions":["Front Office","Middle Office"]},"Legal Department":{"code":"LD","dept_code":56,"divisions":["Division 1","Division 2","Division 3","Division 4","RTI Division","Housing Loan Division","Admin Division"]},"Library & Information Centre":{"code":"LIC","dept_code":30,"divisions":["Lending Section","Reference Section"]},"Macroprudential Surveillance Department":{"code":"MSD","dept_code":38,"divisions":["Financial Institutions Division","Stress Testing, Modeling & Policy Division","Financial Markets Division","Macro financial Conditions and Secretariat Functions Division","Corporate Sector and Household Sector Division","Sustainable Finance Division","Administration Division"]},"Market Operations Department":{"code":"MOD","dept_code":72,"divisions":["Open Market Operations Division","Market Development Division","Domestic Banking Division","Domestic Forex Market Division","Administration Division"]},"Payments And Settlements Department":{"code":"PSD","dept_code":34,"divisions":["Admin Division","Asian Clearing Union Division and Internal Fund Management Back Office","Forex, Gold and Foreign Securities Settlements Division","SWIFT Division","Lanka RTGS Division","Lanka Secure Division","OMO Settlements Division","Payment System Policy & Oversight Division","Offsite Surveillance Division","Money or Value Transfer Services Division","AML / CFT Supervision Division"]},"Policy Review & Monitoring Department":{"code":"PRMD","dept_code":39,"divisions":[]},"Procurment Department":{"code":"PD","dept_code":73,"divisions":["Procurement Management Division","Procurement Documentation Division","Bid Evaluation & Award Recommendation Division","Material Acceptance, Inventory and Payments Division","Logistics & Supplier Registration Division"]},"Risk Management And Compliance Department":{"code":"RMCD","dept_code":55,"divisions":["Financial Division","Operational Division","Compliance Unit","Information & Cyber Security Unit","Administration Division"]},"Secretariat Department":{"code":"SD","dept_code":9,"divisions":["Administration Division","General Administration Division","General Payments Division","Staff Loan Division","Fund Administration Division","Superannuation Division","Medical Benefit Scheme Division","Medical Center Monitoring Division","Awareness and Insurance Division","Restaurants"]},"Security Services Department":{"code":"SSD","dept_code":20,"divisions":["Logistics Division","Administration Division","Fire & Safety and Training Division","Operations Division"]},"Statistics Department":{"code":"STD","dept_code":13,"divisions":["Administration Division","Economic Indicators & Statistical Investigations Division","National Accounts and Employment Division","Prices and Wages Division"]},"Regional Office - Anuradhapura":{"code":"RO/A","dept_code":19,"divisions":["Administration Division","Training and Development Division","Accounts Division","EPF Division"]},"Regional Office - Matale":{"code":"RO-MAL","dept_code":21,"divisions":["Accounts Division","Administration Division","Training and Development Division"]},"Regional Office - Matara":{"code":"RO-MAT","dept_code":16,"divisions":["Administration Division","Financial Literacy and Survey Division","EPF Division","Security Division"]},"Regional Office -Trincomalee":{"code":"RO/T","dept_code":54,"divisions":["Development and Training Division","Administration and Training Division","EPF Desk"]},"Regional Office – Kilinochchi":{"code":"RO-K","dept_code":57,"divisions":["Administration Division & Public Grievances - Help Desk","Program Division & Accounts Division"]},"Regional Office - Nuwara Eliya - Ro/N":{"code":"RO/N","dept_code":65,"divisions":["Development Division","Administration and Accounts Division","EPF Division"]},"External Audit Division":{"code":"","dept_code":null,"divisions":[]}};
+D.depts=Object.entries(D.deptDivisionMap).map(([name,x])=>[name,x.code]);
+D.lists.C=D.depts.map(x=>x[0]);
+D.lists.F=['Open Access','External Under Agreement','Internal Bank Wide','Restricted Across Department','Restricted owning department only','Not shareable'];
+const ACCESS_BY_CLASS={
+  'Public':['Open Access'],
+  'Limited Sharing':['Shareable externally under agreement','Internal Bank-wide','Restricted Across department','Restricted Owning department only','Not shareable'],
+  'Confidential':['Shareable externally under agreement','Restricted Across department','Restricted Owning department only','Not shareable'],
+  'Secret':['Restricted Across department','Restricted Owning department only','Not shareable']
+};
+let N,DEPT,after=null;const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fg=h=>{const n=parseInt(h,16);return((n>>16)*299+(n>>8&255)*587+(n&255)*114)/1000>150?'#0e2841':'#fff'};
+let S={cur:'',last:'',depts:{},codes:{}};
+try{Object.assign(S,JSON.parse(localStorage.getItem('cbslCatalogV1')||'{}'))}catch(e){}
+// Repair incomplete/older browser saves so opening a department cannot fail on missing rows.
+if(!S.depts||typeof S.depts!=='object'||Array.isArray(S.depts))S.depts={};
+if(!S.codes||typeof S.codes!=='object'||Array.isArray(S.codes))S.codes={};
+for(const [savedCode,savedDept] of Object.entries(S.depts)){
+  if(!savedDept||typeof savedDept!=='object'||Array.isArray(savedDept))S.depts[savedCode]={name:savedCode,rows:[]};
+  else{
+    if(!Array.isArray(savedDept.rows))savedDept.rows=[];
+    if(!Array.isArray(savedDept.m))savedDept.m=[];
+    if(!savedDept.name)savedDept.name=(D.depts.find(d=>d[1]===savedCode)||[])[0]||savedCode;
+    savedDept.rows=savedDept.rows.filter(Array.isArray).map(r=>{const row=r.slice(0,D.cols.length);while(row.length<D.cols.length)row.push('');return row});
+  }
+}
+let tm;
+let previewMode=false, dashboardSnapshot=null;
+const save=()=>{if(previewMode){if($('#historyStatus'))$('#historyStatus').textContent='Temporary session · not saved to workbook';updateEntryStatus();return;}clearTimeout(tm);if($('#historyStatus'))$('#historyStatus').textContent='Unsaved changes';tm=setTimeout(()=>{S.sc={cols,groups:D.groups};try{localStorage.setItem('cbslCatalogV1',JSON.stringify(S));if($('#historyStatus'))$('#historyStatus').textContent='Saved locally · '+new Date().toLocaleTimeString();window._cbslLastSaved=new Date().toLocaleTimeString();updateEntryStatus()}catch(e){if($('#historyStatus'))$('#historyStatus').textContent='Local save failed'}if(io&&adminMode)writeMaster().then(()=>{if($('#historyStatus'))$('#historyStatus').textContent='Saved to Excel · '+window._cbslLastSaved}).catch(e=>{if($('#historyStatus'))$('#historyStatus').textContent='Excel save failed: '+e.message})},1200)};
+const rows=()=>S.depts[S.cur].rows;
+const codeOf=n=>(D.depts.find(x=>x[0]===n)||[])[1]||S.codes[n]||'';
+
+$('#dsel').innerHTML=D.depts.map(d=>`<option value="${esc(d[0])}">${esc(d[0])}${d[1]?' ('+esc(d[1])+')':''}</option>`).join('');
+if(S.last)$('#dsel').value=S.last;
+
+const showAppLoading=async(message='Please wait…')=>{
+  const overlay=$('#appLoading'),label=$('#appLoadingMessage');
+  if(label)label.textContent=message;
+  if(overlay){overlay.classList.add('show');overlay.setAttribute('aria-hidden','false')}
+  // Let the browser paint the spinner before starting CPU-heavy work.
+  await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,30)));
+};
+const hideAppLoading=()=>{
+  const overlay=$('#appLoading');
+  if(overlay){overlay.classList.remove('show');overlay.setAttribute('aria-hidden','true')}
+};
+$('#go').onclick=async()=>{
+  const button=$('#go');
+  if(button.disabled)return;
+  const name=$('#dsel').value;
+  if(!name){alert('Please select a department first.');return}
+  button.disabled=true;button.textContent='Opening…';
+  await showAppLoading('Opening department…');
+  try{
+    let code=codeOf(name);
+    // Ask once for departments without an assigned code; invalid input can be corrected
+    // by pressing Continue again instead of trapping the user in a prompt loop.
+    if(!code){
+      const v=prompt('This department has no ID_Codelist code yet.\nEnter a unique code (2-8 letters/digits, e.g. ROA):','');
+      if(v===null)return;
+      code=v.trim().toUpperCase();
+      if(!/^[A-Z0-9]{2,8}$/.test(code)){alert('Code not saved. Use 2-8 letters or digits, then press Continue again.');return}
+      const listed=D.depts.some(d=>d[0]!==name&&d[1]===code);
+      const saved=S.depts[code]&&S.depts[code].name!==name;
+      if(listed||saved){alert('That code is already assigned to another department. Choose a unique code and press Continue again.');return}
+      S.codes[name]=code;
+    }
+    if(S.depts[code]&&S.depts[code].name&&S.depts[code].name!==name){
+      alert('This department code is already associated with another department. Please choose a different code.');
+      return;
+    }
+    if(!S.depts[code]||typeof S.depts[code]!=='object')S.depts[code]={name,rows:[],m:[]};
+    if(!Array.isArray(S.depts[code].rows))S.depts[code].rows=[];
+    if(!Array.isArray(S.depts[code].m))S.depts[code].m=[];
+    S.depts[code].name=name;
+    S.cur=code;S.last=name;
+    $('#dn').textContent=name+' ('+code+')';
+    $('#start').style.display='none';
+    tab('Data Entry');save();
+    const callback=after;after=null;
+    if(typeof callback==='function')callback();
+  }catch(err){
+    console.error('Could not open department:',err);
+    alert('Could not open this department. Your saved data has not been intentionally deleted. Please try again.\n'+(err&&err.message?err.message:''));
+  }finally{
+    button.disabled=false;button.textContent='Continue';hideAppLoading();
+  }
+};
+$('#chg').onclick=()=>{$('#dsel').value=S.last;$('#start').style.display='flex'};
+
+// Enforce the uploaded Data Catalog Template.xlsx schema exactly:
+// row 3 headers, original order, and no columns absent from the template.
+// Keep saved width/validation settings only for matching template headers.
+let cols=D.cols.map(c=>c.slice());
+// The uploaded workbook is the authoritative schema: row 2 defines groups and row 3 defines headers.
+// Migrate saved row values by matching their previous header names, without changing dataset content.
+const previousSchema=(S.sc&&Array.isArray(S.sc.cols)&&S.sc.cols.length)?S.sc.cols:null;
+if(previousSchema){
+  const oldNames=previousSchema.map(c=>String(c[0]||'').trim());
+  const newIndex=new Map(cols.map((c,i)=>[String(c[0]||'').trim().toLowerCase(),i]));
+  Object.values(S.depts||{}).forEach(dep=>{
+    if(!dep||!Array.isArray(dep.rows))return;
+    dep.rows=dep.rows.map(row=>{
+      if(!Array.isArray(row))return row;
+      const migrated=Array(cols.length).fill('');
+      oldNames.forEach((name,oldI)=>{
+        const ni=newIndex.get(name.toLowerCase());
+        if(ni!==undefined && oldI<row.length && row[oldI]!==undefined)migrated[ni]=row[oldI];
+      });
+      return migrated;
+    });
+  });
+}
+S.sc={cols:cols.map(c=>c.slice()),groups:D.groups.map(g=>g.slice())};
+S.removedCols=Array.isArray(S.removedCols)?S.removedCols:[];
+const sync=()=>{N=cols.length;DEPT=cols.findIndex(c=>c[0]==='Department')};
+sync();
+
+// Undo/redo snapshots cover data, cell metadata (including notes), and the editable schema.
+const undoStack=[],redoStack=[];
+let restoringHistory=false;
+const cloneState=v=>JSON.parse(JSON.stringify(v));
+const snapshot=()=>({S:cloneState(S),cols:cloneState(cols),groups:cloneState(D.groups)});
+const updateHistoryButtons=()=>{
+  const u=$('#undoBtn'),r=$('#redoBtn');
+  if(u)u.disabled=!undoStack.length;
+  if(r)r.disabled=!redoStack.length;
+};
+const pushHistory=()=>{
+  if(restoringHistory)return;
+  undoStack.push(snapshot());
+  if(undoStack.length>60)undoStack.shift();
+  redoStack.length=0;
+  updateHistoryButtons();
+};
+const restoreSnapshot=state=>{
+  restoringHistory=true;
+  S=state.S;
+  cols=state.cols;
+  D.groups=state.groups;
+  sync();buildHead();render();paintSel();
+  restoringHistory=false;
+  save();
+  updateHistoryButtons();
+  $('#historyStatus').textContent='Change restored · not yet saved to file';
+};
+const undo=()=>{
+  if(!undoStack.length)return;
+  redoStack.push(snapshot());
+  const state=undoStack.pop();
+  restoreSnapshot(state);
+};
+const redo=()=>{
+  if(!redoStack.length)return;
+  undoStack.push(snapshot());
+  const state=redoStack.pop();
+  restoreSnapshot(state);
+};
+$('#undoBtn').onclick=undo;
+$('#redoBtn').onclick=redo;
+document.addEventListener('keydown',e=>{
+  if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
+  const key=e.key.toLowerCase();
+  if(key==='z'){e.preventDefault();e.shiftKey?redo():undo()}
+  else if(key==='y'){e.preventDefault();redo()}
+});
+const setW=()=>{
+  $('#cg').innerHTML='<col style="width:84px">'+cols.map(c=>`<col style="width:${Math.round(c[2]*7)}px">`).join('');
+  $('#grid').style.width=(84+cols.reduce((a,c)=>a+Math.round(c[2]*7),0))+'px';
+};
+const rebuildGroupsForOrder=()=>{
+  const old=D.groups.slice(), byColor=new Map(old.map(g=>[String(g[3]).toUpperCase(),g]));
+  const next=[];let start=0;
+  while(start<cols.length){
+    const color=String(cols[start][4]||'2F75B5').toUpperCase();let end=start;
+    while(end+1<cols.length&&String(cols[end+1][4]||'2F75B5').toUpperCase()===color)end++;
+    const base=byColor.get(color)||['Other',start,end,color,'FFFFFF'];
+    next.push([base[0],start,end,color,base[4]||'FFFFFF']);start=end+1;
+  }
+  D.groups=next;
+};
+const buildHead=()=>{
+  setW();
+  const orderedGroups=D.groups.slice().sort((a,b)=>a[1]-b[1]);
+  const groupCells=[];let groupCursor=0;
+  // Any columns not covered by a merged group heading still inherit their
+  // exact column-header fill, rather than rendering as an unexplained white gap.
+  const pushGap=(from,to)=>{
+    let i=from;
+    while(i<=to){
+      const color=String((cols[i]&&cols[i][4])||'FFFFFF').replace('#','').toUpperCase();
+      let j=i;
+      while(j+1<=to&&String((cols[j+1]&&cols[j+1][4])||'FFFFFF').replace('#','').toUpperCase()===color)j++;
+      groupCells.push(`<th class="group-gap" colspan="${j-i+1}" aria-hidden="true" style="background:#${color};color:#${fg(color)}"></th>`);
+      i=j+1;
+    }
+  };
+  orderedGroups.forEach(g=>{
+    const start=Math.max(0,Math.min(cols.length,g[1]));
+    const end=Math.max(start-1,Math.min(cols.length-1,g[2]));
+    if(start>groupCursor)pushGap(groupCursor,start-1);
+    if(end>=start)groupCells.push(`<th colspan="${end-start+1}" style="background:#${g[3]};color:#${g[4]}">${esc(g[0])}</th>`);
+    groupCursor=Math.max(groupCursor,end+1);
+  });
+  if(groupCursor<cols.length)pushGap(groupCursor,cols.length-1);
+  const excelCol=i=>{let n=i+1,out='';while(n){const r=(n-1)%26;out=String.fromCharCode(65+r)+out;n=Math.floor((n-1)/26)}return out};
+  $('#hd').innerHTML='<tr class="letters"><th class="sa" rowspan="3">#</th>'+cols.map((c,i)=>`<th data-letter-col="${i}" title="Column ${excelCol(i)}">${excelCol(i)}</th>`).join('')+'</tr><tr class="gr">'+groupCells.join('')+'</tr><tr class="cr">'+cols.map((c,i)=>`<th draggable="true" data-drag-col="${i}" title="Column ${excelCol(i)} · Drag this header to reorder column" class="${c[1]?'m':''}${i===0?' si':''}" style="background:#${c[4]};color:${fg(c[4])}"><span class="col-drag-handle" aria-hidden="true" title="Drag column">⠿</span>${esc(c[0])}${c[1]?'<i>*</i>':''}<span class="rz" data-c="${i}"></span></th>`).join('')+'</tr>';
+};
+let draggedColumn=-1;
+$('#hd').addEventListener('dragstart',e=>{const th=e.target.closest('th[data-drag-col]');if(!th||e.target.closest('.rz')){e.preventDefault();return}draggedColumn=Number(th.dataset.dragCol);if(!Number.isInteger(draggedColumn)){e.preventDefault();return}e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',String(draggedColumn));try{e.dataTransfer.setDragImage(th,Math.min(th.offsetWidth/2,120),Math.min(th.offsetHeight/2,24))}catch(_){}th.classList.add('dragging-col')},true);
+$('#hd').addEventListener('dragover',e=>{if(e.target.closest('th[data-drag-col]')&&draggedColumn>=0){e.preventDefault();e.dataTransfer.dropEffect='move'}},true);
+$('#hd').addEventListener('drop',e=>{
+  const th=e.target.closest('th[data-drag-col]');if(!th||draggedColumn<0)return;e.preventDefault();e.stopPropagation();const from=draggedColumn,to=Number(th.dataset.dragCol);draggedColumn=-1;
+  if(!Number.isInteger(from)||from<0||to<0||from===to||from===0||to===0)return;
+  pushHistory();const moved=cols.splice(from,1)[0];cols.splice(to,0,moved);
+  Object.values(S.depts).forEach(d=>d.rows.forEach(r=>{const v=r.splice(from,1)[0];r.splice(to,0,v)}));
+  rebuildGroupsForOrder();sync();buildHead();render();save();
+});
+$('#hd').addEventListener('dragend',()=>{draggedColumn=-1;$('#hd').querySelectorAll('.dragging-col').forEach(x=>x.classList.remove('dragging-col'))});
+buildHead();
+const Mg=i=>(S.depts[S.cur].m||[])[i]||{};
+const M=i=>{const d=S.depts[S.cur];d.m=d.m||[];return d.m[i]=d.m[i]||{}};
+
+const cell=(r,ci,i)=>{
+  const c=cols[ci],v=r[ci],isDepartment=c[0]==='Department',isDivision=c[0]==='Division / unit',isAccess=c[0]==='Access and Sharing Level',ro=false,mm=Mg(i),st=(mm.s||{})[c[0]]||{};
+  const ts=`style="${mm.h?'height:'+mm.h+'px;':''}${st.c?'color:#'+st.c+';':''}${st.b?'font-weight:700;':''}"`;
+  const isClassification=c[0]==='Information Classification';
+  const isAccessType=c[0]==='Access Type';const isAccessGroup=c[0]==='Access Group';
+  let h;
+  if(isDepartment||isDivision||isClassification||isAccessType||isAccessGroup){
+    // All governed dropdowns use the same checkbox multi-select control.
+    h=`<textarea readonly rows="1" class="pk" ${ts} placeholder="Select ${esc(c[0])}">${esc(v)}</textarea>`;
+  }else{
+    h=(c[3])?`<textarea readonly rows="1" class="pk" ${ts}>${esc(v)}</textarea>`:`<textarea rows="1" ${ts}>${esc(v)}</textarea>`;
+  }
+  const note=(mm.notes||{})[c[0]]||'';
+  return `<td data-c="${ci}" style="${st.f?'background:#'+st.f:''}" class="note-cell ${ro?'ro':''}${ci===0?' id':''}${c[1]&&!v?' e':''}">${h}<button type="button" class="note-btn${note?' has-note':''}" title="${note?'Edit cell note':'Add cell note'}" aria-label="${note?'Edit cell note':'Add cell note'}" data-note="${ci}">${note?'📝':'＋'}</button></td>`;
+};
+const rowHTML=(r,i)=>{while(r.length<cols.length)r.push('');return `<tr data-i="${i}"><td class="act"><b>${i+1}</b><button class="ins" title="Insert row below">＋</button><button class="dup" title="Duplicate">⧉</button><button class="del" title="Delete">✕</button><span class="rr"></span></td>${cols.map((_,ci)=>cell(r,ci,i)).join('')}</tr>`};
+const fit=t=>{t.style.height='auto';t.style.height=Math.min(Math.max(t.scrollHeight,30),170)+'px'};
+const updateEntryStatus=()=>{const sr=$('#statusRows'),sc=$('#statusCols'),ss=$('#statusSaved'),sel=$('#statusCell');if(sr)sr.textContent='Rows: '+(S.cur?rows().length:0);if(sc)sc.textContent='Columns: '+cols.length;if(ss)ss.textContent='Last saved: '+(window._cbslLastSaved||'—');if(sel){const q=rect();sel.textContent='Selected cell: '+(q?excelColLetter(q.c)+(q.r1+2):'—')}};
+const stat=()=>{const m=rows().reduce((a,r)=>a+cols.reduce((b,c,i)=>b+(c[1]&&!r[i]?1:0),0),0);$('#st').textContent=rows().length+' rows · '+m+' mandatory cells empty';updateEntryStatus()};
+const render=()=>{
+  rows().forEach(r=>{if(DEPT>=0&&!r[DEPT])r[DEPT]=S.depts[S.cur].name;});
+  $('#tb').innerHTML=rows().map(rowHTML).join('');
+  $('#tb').querySelectorAll('textarea').forEach(t=>fit(t));
+  stat();
+};
+
+const nextId=()=>{
+  const re=new RegExp('^'+S.cur+'-(\\d+)$');let m=0;
+  rows().forEach(r=>{const x=re.exec(r[0]);if(x)m=Math.max(m,+x[1])});
+  return S.cur+'-'+String(m+1).padStart(3,'0');
+};
+const newRow=()=>{const r=Array(N).fill('');r[0]=nextId();r[DEPT]=S.depts[S.cur].name;const divIdx=cols.findIndex(c=>c[0]==='Division / unit');if(divIdx>=0)r[divIdx]='';return r};
+const addRow=r=>{rows().push(r);$('#tb').insertAdjacentHTML('beforeend',rowHTML(r,rows().length-1))};
+
+$('#add').onclick=()=>{
+  pushHistory();addRow(newRow());stat();save();
+  const w=$('#entry');w.scrollTop=w.scrollHeight;
+  $('#tb').lastElementChild.querySelector('td[data-c="1"] textarea').focus();
+};
+
+const tb=$('#tb'),sg=$('#sg');
+let items=[],act=-1,curEl=null;
+const setVal=t=>{
+  const td=t.closest('td'),i=+t.closest('tr').dataset.i,c=+td.dataset.c;
+  rows()[i][c]=t.value;
+  if(c===0)td.classList.toggle('dupid',!!t.value&&rows().some((x,k)=>k!==i&&x[0]===t.value));
+  td.classList.toggle('e',!t.value&&!!cols[c][1]);
+  stat();save();
+};
+const hide=()=>{sg.style.display='none';items=[];act=-1};
+const paint=()=>{sg.innerHTML=items.map((v,i)=>`<div data-v="${esc(v)}" class="${i===act?'on':''}">${esc(v)}</div>`).join('')};
+const suggest=t=>{
+  const c=+t.closest('td').dataset.c;if(c===0)return hide();
+  const cur=t.value.trim().toLowerCase(),cnt=new Map();
+  Object.values(S.depts).forEach(d=>d.rows.forEach(r=>{const v=r[c];if(v&&v.length<200)cnt.set(v,(cnt.get(v)||0)+1)}));
+  items=[...cnt].filter(([v])=>{const l=v.toLowerCase();return l!==cur&&(!cur||l.includes(cur))}).sort((a,b)=>b[1]-a[1]).slice(0,8).map(x=>x[0]);
+  act=-1;curEl=t;
+  if(!items.length)return hide();
+  paint();
+  const r=t.getBoundingClientRect();
+  // Keep the suggestion list visible: place it below cells near the top,
+  // and above cells near the bottom when there is more room there.
+  const gap=4, desired=240, below=Math.max(0,innerHeight-r.bottom-gap), above=Math.max(0,r.top-gap);
+  const placeAbove=below<Math.min(desired,160)&&above>below;
+  const available=placeAbove?above:below;
+  const h=Math.max(60,Math.min(desired,available));
+  Object.assign(sg.style,{
+    display:'block',
+    left:Math.max(4,Math.min(r.left,innerWidth-Math.max(r.width,220)-4))+'px',
+    top:(placeAbove?Math.max(4,r.top-h-gap):r.bottom+gap)+'px',
+    minWidth:Math.min(Math.max(r.width,220),innerWidth-8)+'px',
+    maxHeight:h+'px'
+  });
+};
+const pick=(v,targetOverride)=>{
+  const target=targetOverride||pk||curEl;if(!target)return;
+  pushHistory();
+  const ci=+target.closest('td').dataset.c,ri=+target.closest('tr').dataset.i,name=cols[ci][0];
+  let value=v;
+  if(name==='Department')value=v.replace(/\s\([^()]*\)$/,'');
+  target.value=value;setVal(target);fit(target);hide();
+  if(name==='Department'){
+    const di=cols.findIndex(c=>c[0]==='Division / unit');
+    if(di>=0){rows()[ri][di]='';const el=$(`#tb tr[data-i="${ri}"] td[data-c="${di}"] textarea`);if(el)el.value='';}
+  }
+  if(name==='Information Classification'){
+    const ai=cols.findIndex(c=>c[0]==='Access and Sharing Level');
+    if(ai>=0&&!((ACCESS_BY_CLASS[value]||[]).includes(rows()[ri][ai]))){rows()[ri][ai]='';const el=$(`#tb tr[data-i="${ri}"] td[data-c="${ai}"] textarea`);if(el)el.value='';}
+  }
+  save();$('#historyStatus').textContent='Unsaved changes';
+};
+let activeEditTarget=null;
+tb.addEventListener('focusin',e=>{const t=e.target;if(t.tagName==='TEXTAREA'&&!t.readOnly&&t!==activeEditTarget){activeEditTarget=t;pushHistory();}});
+tb.addEventListener('focusout',e=>{if(e.target===activeEditTarget)activeEditTarget=null;});
+tb.addEventListener('input',e=>{const t=e.target;if(t.tagName!=='TEXTAREA'||t.readOnly)return;setVal(t);fit(t);suggest(t);$('#historyStatus').textContent='Unsaved changes';});
+tb.addEventListener('change',e=>{
+  const t=e.target;if(!t.classList.contains('entry-select'))return;
+  const td=t.closest('td'),ri=+t.closest('tr').dataset.i,ci=+td.dataset.c,col=cols[ci][0];
+  pushHistory();rows()[ri][ci]=t.value;
+  if(col==='Department'){const di=cols.findIndex(x=>x[0]==='Division / unit');if(di>=0)rows()[ri][di]='';}
+  if(col==='Information Classification'){const ai=cols.findIndex(x=>x[0]==='Access Type');const allowed=ACCESS_BY_CLASS[t.value]||[];if(ai>=0&&!allowed.includes(rows()[ri][ai]))rows()[ri][ai]='';}
+  render();$('#historyStatus').textContent='Unsaved changes';save();
+});
+const cb=document.createElement('div');cb.id='cb';document.body.appendChild(cb);
+let pk=null;
+const closePk=()=>{cb.style.display='none';pk=null};
+const optHTML=(o,on)=>`<label><input type="checkbox" value="${esc(o)}"${on?' checked':''}> ${esc(o)}</label>`;
+const openPk=t=>{
+  const c=+t.closest('td').dataset.c,rowIndex=+t.closest('tr').dataset.i,colName=cols[c][0],row=rows()[rowIndex];
+  let L=D.lists[cols[c][3]]||[];
+  if(colName==='Department')L=D.depts.map(d=>d[0]+' ('+d[1]+')');
+  if(colName==='Information Classification')L=['Public','Limited Sharing','Confidential','Secret'];
+  if(colName==='Access Type'){const clsIdx=cols.findIndex(x=>x[0]==='Information Classification');const classes=String(row[clsIdx]||'').split(',').map(x=>x.trim()).filter(Boolean);L=[...new Set(classes.flatMap(cls=>ACCESS_BY_CLASS[cls]||[]))];}
+  if(colName==='Division / unit'){const depts=String(row[DEPT]||S.depts[S.cur].name).split(',').map(x=>x.trim()).filter(Boolean);L=[...new Set(depts.flatMap(dept=>D.deptDivisionMap[dept]?.divisions||[]))];}
+  if(colName==='Access Type'||colName==='Access and Sharing Level'){const clsIdx=cols.findIndex(x=>x[0]==='Information Classification');const classes=String(row[clsIdx]||'').split(',').map(x=>x.trim()).filter(Boolean);L=[...new Set(classes.flatMap(cls=>ACCESS_BY_CLASS[cls]||[]))];}
+  const cur=t.value.split(',').map(x=>x.trim()).filter(Boolean);
+  pk=t;
+  const needsSearch=L.length>10;
+  cb.innerHTML=(needsSearch?'<input id="cbSearch" type="search" placeholder="Search '+esc(colName)+' options...">':'')+'<div id="cbl">'+L.map(o=>optHTML(o,cur.includes(o))).join('')+cur.filter(x=>!L.includes(x)).map(o=>optHTML(o,1)).join('')+'</div><input id="cbx" placeholder="Other value, press Enter">';
+  const r=t.getBoundingClientRect();
+  Object.assign(cb.style,{display:'block',left:r.left+'px',top:r.bottom+'px',minWidth:Math.max(r.width,220)+'px'});
+  const b=cb.getBoundingClientRect();
+  if(b.bottom>innerHeight)cb.style.top=Math.max(0,r.top-b.height)+'px';
+};
+const commitPk=()=>{
+  const chosen=[...cb.querySelectorAll('input[type=checkbox]:checked')].map(i=>i.value);
+  const colIndex=+pk.closest('td').dataset.c,rowIndex=+pk.closest('tr').dataset.i,colName=cols[colIndex][0],row=rows()[rowIndex];
+  pushHistory();pk.value=chosen.join(', ');setVal(pk);fit(pk);
+  if(colName==='Department'){
+    const di=cols.findIndex(x=>x[0]==='Division / unit');if(di>=0){row[di]='';const el=$(`#tb tr[data-i="${rowIndex}"] td[data-c="${di}"] .pk`);if(el)el.value='';}
+  }
+  if(colName==='Information Classification'){
+    const ai=cols.findIndex(x=>x[0]==='Access Type');if(ai>=0){const allowed=new Set(chosen.flatMap(x=>ACCESS_BY_CLASS[x]||[]));const current=String(row[ai]||'').split(',').map(x=>x.trim()).filter(Boolean);const kept=current.filter(x=>allowed.has(x));row[ai]=kept.join(', ');const el=$(`#tb tr[data-i="${rowIndex}"] td[data-c="${ai}"] .pk`);if(el)el.value=row[ai];}
+  }
+  $('#historyStatus').textContent='Unsaved changes';save();
+};
+cb.addEventListener('change',e=>{if(e.target.type==='checkbox')commitPk()});
+cb.addEventListener('input',e=>{
+  if(e.target.id!=='cbSearch')return;
+  const q=e.target.value.trim().toLocaleLowerCase();
+  cb.querySelectorAll('#cbl label').forEach(label=>{
+    const text=label.textContent.trim().toLocaleLowerCase();
+    label.style.display=!q||text.includes(q)?'flex':'none';
+  });
+});
+cb.addEventListener('keydown',e=>{
+  if(e.target.id!=='cbx'||e.key!=='Enter')return;
+  e.preventDefault();
+  const v=e.target.value.trim().replace(/,/g,' ');if(!v)return;
+  const ex=[...cb.querySelectorAll('input[type=checkbox]')].find(i=>i.value===v);
+  if(ex)ex.checked=true;else $('#cbl').insertAdjacentHTML('beforeend',optHTML(v,1));
+  e.target.value='';commitPk();
+});
+tb.addEventListener('click',e=>{const t=e.target;if(t.classList.contains('pk'))pk===t?closePk():openPk(t)});
+tb.addEventListener('keydown',e=>{if(e.target.classList.contains('pk')&&['Enter',' ','ArrowDown'].includes(e.key)){e.preventDefault();openPk(e.target)}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePk()});
+document.addEventListener('mousedown',e=>{if(pk&&!cb.contains(e.target)&&e.target!==pk)closePk()});
+$('#entry').addEventListener('scroll',closePk);
+
+tb.addEventListener('focusin',e=>{const t=e.target;if(t.tagName==='TEXTAREA'&&!t.readOnly)suggest(t)});
+tb.addEventListener('focusout',hide);
+tb.addEventListener('keydown',e=>{
+  if(!items.length)return;
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();act=(act+(e.key==='ArrowDown'?1:-1)+items.length)%items.length;paint()}
+  else if(e.key==='Enter'&&act>=0){e.preventDefault();pick(items[act])}
+  else if(e.key==='Escape')hide();
+});
+sg.addEventListener('mousedown',e=>{e.preventDefault();const d=e.target.closest('div');if(d)pick(d.dataset.v)});
+$('#entry').addEventListener('scroll',hide);
+tb.addEventListener('click',e=>{
+  const noteBtn=e.target.closest('.note-btn');
+  if(noteBtn){
+    e.preventDefault();e.stopPropagation();
+    const tr=noteBtn.closest('tr'),i=+tr.dataset.i,c=+noteBtn.dataset.note,name=cols[c][0];
+    activeCellNote={i,name,button:noteBtn};
+    const existingNote=(Mg(i).notes||{})[name]||'';
+    $('#noteEditorText').value=existingNote;
+    $('#removeCellNote').style.display=existingNote?'inline-block':'none';
+    const rect=noteBtn.getBoundingClientRect(),editor=$('#noteEditor');
+    editor.style.display='block';
+    const w=Math.min(320,window.innerWidth-20),h=editor.offsetHeight||190;
+    let left=Math.min(Math.max(10,rect.left),window.innerWidth-w-10);
+    let top=rect.bottom+h+12<window.innerHeight?rect.bottom+6:Math.max(10,rect.top-h-6);
+    editor.style.left=left+'px';editor.style.top=top+'px';
+    $('#noteEditorText').focus();return;
+  }
+  const b=e.target.closest('button');if(!b)return;
+  const i=+b.closest('tr').dataset.i;
+  if(b.classList.contains('ins')){insertRow(i+1);return}
+  if(b.classList.contains('del')){
+    if(!confirm('Delete row '+rows()[i][0]+'?'))return;
+    pushHistory();rows().splice(i,1);(S.depts[S.cur].m||[]).splice(i,1);render();save();
+  }else{
+    pushHistory();const r=rows()[i].slice();r[0]=nextId();addRow(r);stat();save();
+  }
+});
+
+const tabs=['Dashboard','Data Entry','Validation Codelists','Field Definitions','Boundary Criteria','Summary & Notes'];
+$('#tabs').innerHTML=tabs.slice(1).map(t=>`<button data-t="${esc(t)}">${t==='Data Entry'?'Entry sheet':esc(t)}</button>`).join('');
+$('#tabs').onclick=e=>{const b=e.target.closest('button');if(b)tab(b.dataset.t)};
+$('#freezeBtn').onclick=()=>{const enabled=$('#entry').classList.toggle('freeze-enabled');$('#freezeBtn').setAttribute('aria-pressed',String(enabled));$('#freezeBtn').classList.toggle('gold',enabled);$('#freezeBtn').textContent=enabled?'❄ Unfreeze':'❄ Freeze';$('#freezeBtn').title=enabled?'Unfreeze first column and header row':'Freeze first column and header row'};
+function tab(k){
+  if(k!=='Dashboard'&&!S.cur){needDept(()=>tab(k));return}
+  const d=k==='Dashboard',e=k==='Data Entry';
+  document.body.className=d?'dash':'entry';
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===k));
+  $('#entry').style.display=e?'':'none';
+  $('#tools').style.display=e?'flex':'none';
+  $('#ref').style.display=d||e?'none':'';
+  if(d){dash();if(io)pull().then(()=>{if(document.body.className==='dash')dash()}).catch(()=>{});return}
+  if(e)return render();
+  const s=D.refs[k];
+  $('#ref').innerHTML=`${k==='Validation Codelists'?'<div style="padding:10px 14px;background:#fff8dc;border-bottom:1px solid #eadba5"><b>Admin:</b> Edit codelist cells directly. Changes update data-entry dropdowns and are saved to the connected workbook automatically.</div>':''}<table class="rf" data-ref="${esc(k)}"><colgroup>${s.w.map(w=>`<col style="width:${Math.round(w*7)}px">`).join('')}</colgroup>${s.r.map((r,ri)=>`<tr>${r.map((c,ci)=>`<td ${k==='Validation Codelists'&&ri>0?'contenteditable="true" spellcheck="false" data-ri="'+ri+'" data-ci="'+ci+'"':''} style="${c[1]?'font-weight:700;':''}${c[2]?'background:#'+c[2]:''}">${esc(c[0])}</td>`).join('')}</tr>`).join('')}</table>`;
+  if(k==='Validation Codelists'){
+    const table=$('#ref').querySelector('table');
+    table.addEventListener('focusout',async ev=>{
+      const cell=ev.target.closest('td[contenteditable="true"]');if(!cell)return;
+      const ri=+cell.dataset.ri,ci=+cell.dataset.ci,val=cell.textContent.trim();
+      const old=s.r[ri][ci][0];if(String(old??'')===val)return;
+      s.r[ri][ci][0]=val||null;
+      skipPullOnce=true;
+      const code=Object.keys(D.lists).find(key=>D.cols.some(col=>col[3]===key&&col[0]===s.r[0][ci][0]));
+      if(code){D.lists[code]=s.r.slice(1).map(row=>String(row[ci][0]??'').trim()).filter(Boolean);}
+      save();
+      if(document.body.classList.contains('dash'))dash();
+      else if(document.body.classList.contains('entry'))render();
+    });
+  }
+}
+
+const fill=h=>({type:'pattern',pattern:'solid',fgColor:{argb:'FF'+h}});
+const addSheet=(wb,name,rs,mm=[])=>{
+  const ws=wb.addWorksheet(name,{views:[{state:'frozen',xSplit:1,ySplit:3}]});
+  ws.columns=cols.map(c=>({width:c[2]}));
+  const t=ws.getCell(1,1);t.value=D.title;t.font={name:'Calibri',size:16,bold:true};
+  ws.getRow(1).height=30;ws.getRow(2).height=26;ws.getRow(3).height=48;
+  D.groups.forEach(g=>{
+    if(g[2]>g[1])ws.mergeCells(2,g[1]+1,2,g[2]+1);
+    const c=ws.getCell(2,g[1]+1);c.value=g[0];c.fill=fill(g[3]);
+    c.font={name:'Calibri',bold:true,color:{argb:'FF'+g[4]}};c.alignment={horizontal:'center',vertical:'middle'};
+  });
+  cols.forEach((c,i)=>{
+    const x=ws.getCell(3,i+1);x.value=c[0];x.fill=fill(c[4]);
+    x.font={name:'Calibri',bold:!!c[1]};x.alignment={horizontal:'center',vertical:'middle',wrapText:true};
+  });
+  const b={style:'thin',color:{argb:'FFBFBFBF'}},last=Math.max(rs.length+3,1000);
+  rs.forEach((r,i)=>r.forEach((v,j)=>{
+    const c=ws.getCell(i+4,j+1);if(v!=='')c.value=v;
+    const note=((mm[i]||{}).notes||{})[cols[j][0]];if(note)c.note=note;
+    const s=((mm[i]||{}).s||{})[cols[j][0]]||{};c.font={name:'Calibri',size:11,bold:!!s.b,color:{argb:'FF'+(s.c||'000000')}};if(s.f)c.fill=fill(s.f);c.alignment={vertical:'top',wrapText:true};c.border={top:b,left:b,bottom:b,right:b};
+  }));
+  mm.forEach((m,i)=>{if(m&&m.h&&i<rs.length)ws.getRow(i+4).height=m.h*.75});
+  // Apply Excel dropdown validations using the actual values in the
+  // Validation Codelists worksheet included in this workbook.
+  const liveCodelists=(typeof liveReferenceSheets!=='undefined' && liveReferenceSheets['Validation Codelists'])
+    ? liveReferenceSheets['Validation Codelists'] : null;
+  const colLetterToIndex=letter=>String(letter||'').toUpperCase().split('').reduce((n,ch)=>n*26+ch.charCodeAt(0)-64,0)-1;
+  const toExcelCol=n=>{let out='';for(n++;n;n=Math.floor((n-1)/26))out=String.fromCharCode(65+(n-1)%26)+out;return out;};
+  cols.forEach((c,j)=>{
+    if(!c[3])return;
+    const listIndex=colLetterToIndex(c[3]);
+    let listRange=D.lref[c[3]];
+    if(liveCodelists && listIndex>=0){
+      let lastValueRow=1;
+      for(let ri=1;ri<liveCodelists.length;ri++){
+        const value=liveCodelists[ri]&&liveCodelists[ri][listIndex];
+        if(value!==''&&value!==null&&value!==undefined)lastValueRow=ri+1;
+      }
+      if(lastValueRow>=2)listRange=`$${toExcelCol(listIndex)}$2:$${toExcelCol(listIndex)}$${lastValueRow}`;
+    }
+    if(!listRange)return;
+    for(let r=4;r<=last;r++)ws.getCell(r,j+1).dataValidation={
+      type:'list',allowBlank:true,showErrorMessage:true,
+      formulae:[`'Validation Codelists'!${listRange}`]
+    };
+  });
+  // Excel filter arrows appear on the catalog column headings (row 3).
+  ws.autoFilter={from:{row:3,column:1},to:{row:Math.max(3,rs.length+3),column:cols.length}};
+};
+const addRef=(wb,k)=>{
+  const s=D.refs[k],w=wb.addWorksheet(k);
+  s.w.forEach((x,i)=>w.getColumn(i+1).width=x);
+  s.r.forEach((r,i)=>r.forEach((c,j)=>{
+    if(c[0]===null&&!c[2])return;
+    const x=w.getCell(i+1,j+1);x.value=c[0];x.font={name:'Calibri',bold:!!c[1]};
+    if(c[2])x.fill=fill(c[2]);x.alignment={vertical:'top',wrapText:true};
+  }));
+  s.m.forEach(m=>w.mergeCells(m));
+};
+const saveWb=async(wb,fn)=>{
+  const buf=await wb.xlsx.writeBuffer(),a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+  a.download=fn;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+};
+$('#dl').onclick=async()=>{
+  if(previewMode){
+    // Export a separate workbook containing every department already in the catalog,
+    // plus the temporary edits made in this session. Never write it to the source folder.
+    const wb=buildMaster(true);
+    await saveWb(wb,'CBSL_Data_Catalog_Filled.xlsx');
+    return;
+  }
+  if(!S.cur)return needDept(()=>$('#dl').click());
+  const wb=new ExcelJS.Workbook();
+  addSheet(wb,S.cur,rows(),S.depts[S.cur].m||[]);addRef(wb,'Validation Codelists');
+  if($('#inc').checked)tabs.slice(3).forEach(k=>addRef(wb,k));
+  await saveWb(wb,S.cur+'_Data_Catalog.xlsx');
+};
+
+const norm=s=>String(s??'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+const bg=s=>{const a=[];for(let i=0;i<s.length-1;i++)a.push(s.slice(i,i+2));return a};
+const sim=(a,b)=>{
+  const x=bg(a),z=bg(b);if(!x.length||!z.length)return a===b?1:0;
+  let n=0;const y=[...z];
+  x.forEach(p=>{const k=y.indexOf(p);if(k>-1){n++;y.splice(k,1)}});
+  return 2*n/(x.length+z.length);
+};
+const cv=v=>{
+  if(v==null)return '';
+  if(v instanceof Date)return v.toISOString().slice(0,10);
+  if(typeof v==='object'){
+    if(v.richText)return v.richText.map(t=>t.text).join('').trim();
+    if('result' in v)return cv(v.result);
+    if('text' in v)return cv(v.text);
+    return '';
+  }
+  return String(v).trim();
+};
+$('#imp').onclick=()=>S.cur?$('#file').click():needDept(()=>$('#file').click());
+$('#file').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  await showAppLoading('Reading Excel workbook…');
+  try{
+    const wb=new ExcelJS.Workbook();await wb.xlsx.load(await f.arrayBuffer());
+    const templateHeaders=cols.map(c=>norm(c[0]));
+    let best=null;
+    wb.worksheets.forEach(ws=>{
+      // The catalog template defines its headers on row 3. Prefer row 3 whenever
+      // it contains recognizable template headers; otherwise locate the best row.
+      const scanRows=[3,...Array.from({length:Math.min(ws.rowCount,15)},(_,i)=>i+1).filter(r=>r!==3)];
+      scanRows.forEach(r=>{
+        if(r>ws.rowCount)return;
+        const h=ws.getRow(r).values;let n=0;
+        for(let k=1;k<h.length;k++)if(templateHeaders.includes(norm(cv(h[k]))))n++;
+        if(!best||n>best.n||(n===best.n&&r===3))best={ws,r,n};
+      });
+    });
+    if(!best||best.n<2){alert('No recognizable catalog headers were found. Check that the column names are in row 3 of the template.');return}
+    const h=best.ws.getRow(best.r).values,map=[],usedTargets=new Set(),un=[];
+    // Exact header matches only, keeping the template's current column order.
+    for(let k=1;k<h.length;k++){
+      const header=cv(h[k]);if(!header)continue;
+      const t=templateHeaders.indexOf(norm(header));
+      if(t>-1&&!usedTargets.has(t)){usedTargets.add(t);map.push([k,t]);}
+      else if(t<0)un.push([k,header]);
+    }
+    const available=cols.map((c,i)=>i).filter(i=>!usedTargets.has(i)&&i!==DEPT);
+    const rowsHtml=un.map(([k,header])=>{
+      let bi=-1,bs=0;available.forEach(i=>{const score=sim(norm(header),templateHeaders[i]);if(score>bs){bs=score;bi=i}});
+      return `<tr><td>${esc(header)}</td><td><select data-k="${k}"><option value="">— Skip this column —</option>${available.map(i=>`<option value="${i}"${i===bi&&bs>=.55?' selected':''}>Use: ${esc(cols[i][0])}</option>`).join('')}<option value="__new__">＋ Create a new column…</option></select></td></tr>`;
+    }).join('');
+    $('#mc').innerHTML=`<h2>Import from ${esc(best.ws.name)}</h2><p>Header row: ${best.r}. ${map.length} columns matched exactly to the catalog headers.</p>${un.length?`<p>For each unmatched source header, select the correct existing field, skip it, or create a new column. Existing template column order will be preserved.</p><table><thead><tr><th>Source header</th><th>Import into</th></tr></thead><tbody>${rowsHtml}</tbody></table>`:'<p>All recognized columns match the catalog schema.</p>'}<button class="btn gold" id="ok">Import</button> <button class="btn alt" id="no">Cancel</button>`;
+    $('#mod').style.display='flex';
+    $('#no').onclick=()=>$('#mod').style.display='none';
+    $('#ok').onclick=async()=>{
+      await showAppLoading('Importing dataset rows…');
+      try{
+        const selections=[...$('#mc').querySelectorAll('select')].map(sel=>({k:+sel.dataset.k,value:sel.value,header:cv(h[+sel.dataset.k])}));
+        const newSpecs=[];
+        // Collect all requested new-column details first, so cancelling never leaves a partial schema.
+        for(const item of selections){
+          if(item.value!=='__new__')continue;
+          const name=prompt(`New column for source field "${item.header}". Enter the new column name:`,item.header);
+          if(name===null)return;
+          const cleanName=name.trim();
+          if(!cleanName){alert('Column name cannot be empty.');return}
+          if(cols.some(c=>norm(c[0])===norm(cleanName))||newSpecs.some(x=>norm(x.name)===norm(cleanName))){alert('That column already exists. Choose the existing column instead.');return}
+          const groupsText=D.groups.map((g,i)=>`${i+1}. ${g[0]}`).join('\n');
+          const groupAnswer=prompt(`Choose a group for "${cleanName}" by number:\n${groupsText}`,String(Math.max(1,D.groups.length)));
+          if(groupAnswer===null)return;
+          const groupIndex=Number(groupAnswer)-1,group=D.groups[groupIndex];
+          if(!group){alert('Invalid group number. Import cancelled.');return}
+          const mandatory=confirm(`Should "${cleanName}" be a mandatory field?\n\nOK = Mandatory (bold)\nCancel = Optional`);
+          newSpecs.push({item,name:cleanName,groupIndex,mandatory});
+        }
+        pushHistory();
+        // Add new columns at the end of their chosen group. Existing template columns
+        // keep their relative order; source mappings are shifted with inserted columns.
+        newSpecs.forEach(spec=>{
+          const group=D.groups[spec.groupIndex];
+          const insertAt=Math.max(0,Math.min(cols.length,group[2]+1));
+          cols.splice(insertAt,0,[spec.name,spec.mandatory?1:0,18,'',group[3],1]);
+          Object.values(S.depts).forEach(d=>(d.rows||[]).forEach(r=>r.splice(insertAt,0,'')));
+          D.groups.forEach(g=>{if(g[1]>=insertAt){g[1]++;g[2]++}else if(g[2]>=insertAt-1)g[2]++});
+          map.forEach(pair=>{if(pair[1]>=insertAt)pair[1]++});
+          selections.forEach(sel=>{if(sel!==spec.item&&sel.value!==''&&sel.value!=='__new__'&&+sel.value>=insertAt)sel.value=String(+sel.value+1)});
+          spec.item.value=String(insertAt);
+          templateHeaders.splice(insertAt,0,norm(spec.name));
+          sync();
+        });
+        const m=map.slice(),seen=new Set(m.map(pair=>pair[1]));
+        selections.forEach(sel=>{
+          if(sel.value===''||sel.value==='__new__')return;
+          const t=+sel.value;
+          if(!Number.isInteger(t)||t<0||t>=cols.length)return;
+          if(seen.has(t)){alert(`More than one source column maps to "${cols[t][0]}". Choose a different destination or skip one column.`);throw new Error('Duplicate import destination');}
+          seen.add(t);m.push([sel.k,t]);
+        });
+        const ids=new Set(rows().map(r=>String(r[0]||'')));let n=0;
+        for(let r=best.r+1;r<=best.ws.rowCount;r++){
+          const source=best.ws.getRow(r),rec=Array(cols.length).fill('');let any=false;
+          m.forEach(([k,t])=>{const v=cv(source.getCell(k).value);if(v!==''){any=true;rec[t]=v}});
+          if(!any)continue;
+          const x=newRow();
+          rec.forEach((v,i)=>{if(v!==''&&i!==DEPT&&i!==0)x[i]=v});
+          if(rec[0]&&!ids.has(String(rec[0])))x[0]=rec[0];
+          ids.add(String(x[0]||''));addRow(x);n++;
+        }
+        buildHead();render();$('#mod').style.display='none';stat();save();
+        alert(`${n} rows imported into ${S.cur}. Existing template headers and their order were preserved.`);
+      }catch(err){if(err.message!=='Duplicate import destination')alert('Import could not be completed: '+err.message)}finally{hideAppLoading()}
+    };
+  }catch(err){alert('Could not read this file: '+err.message)}finally{hideAppLoading()}
+};
+
+function needDept(fn){after=fn;if(S.last)$('#dsel').value=S.last;$('#start').style.display='flex'}
+$('#cn').onclick=()=>{after=null;$('#start').style.display='none'};
+
+const insertRow=i=>{
+  pushHistory();
+  const r=newRow(),d=S.depts[S.cur];
+  rows().splice(i,0,r);d.m=d.m||[];d.m.splice(i,0,{});
+  const re=new RegExp('^'+S.cur+'-\\d+$');let k=0;
+  rows().forEach(x=>{if(re.test(x[0]))x[0]=S.cur+'-'+String(++k).padStart(3,'0')});
+  render();save();
+};
+$('#ir').onclick=()=>insertRow(sa?Math.min(sa.i,sb.i):rows().length);
+$('#ic').onclick=()=>{
+  if(document.querySelector('.column-dialog-backdrop'))return;
+  const backdrop=document.createElement('div');backdrop.className='column-dialog-backdrop';
+  const groupOptions=D.groups.map((g,i)=>`<option value="${i}">${String(g[0]).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[ch]))}</option>`).join('');
+  backdrop.innerHTML=`<form class="column-dialog" role="dialog" aria-modal="true" aria-labelledby="addColumnTitle"><h3 id="addColumnTitle">Add New Column</h3><div class="field"><label for="newColumnName">Column name</label><input id="newColumnName" type="text" maxlength="100" placeholder="Enter column name" required autocomplete="off"></div><div class="field"><label for="newColumnColor">Group</label><select id="newColumnColor">${groupOptions}</select></div><label class="mandatory-choice"><input id="newColumnMandatory" type="checkbox"> Mandatory field (must be completed)</label><div class="dialog-actions"><button type="button" data-cancel>Cancel</button><button type="submit" class="primary">Add column</button></div></form>`;
+  document.body.appendChild(backdrop);
+  const form=backdrop.querySelector('form'),nameInput=backdrop.querySelector('#newColumnName');nameInput.focus();
+  const close=()=>backdrop.remove();
+  backdrop.querySelector('[data-cancel]').onclick=close;
+  backdrop.addEventListener('click',e=>{if(e.target===backdrop)close()});
+  form.addEventListener('submit',e=>{
+    e.preventDefault();const n=nameInput.value.trim();if(!n){nameInput.focus();return}
+    if(cols.some(c=>c[0].toLowerCase()===n.toLowerCase())){alert('That column already exists.');nameInput.focus();return}
+    const groupIndex=Number(backdrop.querySelector('#newColumnColor').value),group=D.groups[groupIndex];if(!group){alert('Please select a color group.');return}
+    pushHistory();
+    S.removedCols=(S.removedCols||[]).filter(x=>x!==n);
+    const k=Math.max(0,Math.min(cols.length,group[2]+1));
+    cols.splice(k,0,[n,backdrop.querySelector('#newColumnMandatory').checked?1:0,18,'',group[3],1]);
+    Object.values(S.depts).forEach(d=>d.rows.forEach(r=>r.splice(k,0,'')));
+    D.groups.forEach(g=>{if(g[1]>=k){g[1]++;g[2]++}else if(g[2]>=k-1)g[2]++});
+    sync();buildHead();render();save();close();
+  });
+};
+$('#dc').onclick=()=>{
+  const k=sa?sa.c:-1;
+  if(k<0)return alert('Select a cell in the column you want to delete first.');
+  if(k===0||cols[k][0]==='Department')return alert('The ID and Department columns are protected.');
+  if(!confirm('Delete column "'+cols[k][0]+'" from all departments? This cannot be recovered after saving unless you use Undo.'))return;
+  pushHistory();
+  const deletedName=cols[k][0];
+  cols.splice(k,1);
+  if(!S.removedCols.includes(deletedName))S.removedCols.push(deletedName);
+  Object.values(S.depts).forEach(d=>d.rows.forEach(r=>r.splice(k,1)));
+  // Keep group ranges aligned after deleting any schema column.
+  D.groups=D.groups.map(g=>{
+    const x=g.slice();
+    if(k<x[1]){x[1]--;x[2]--}
+    else if(k<=x[2])x[2]--;
+    return x;
+  }).filter(g=>g[2]>=g[1]);
+  sa=sb=null;sync();buildHead();render();save();
+  $('#historyStatus').textContent='Unsaved changes';
+};
+
+let sa=null,sb=null;
+const rect=()=>sa&&{r1:Math.min(sa.i,sb.i),r2:Math.max(sa.i,sb.i),c1:Math.min(sa.c,sb.c),c2:Math.max(sa.c,sb.c)};
+const rc=t=>{const td=t.closest&&t.closest('#tb td');return td&&td.dataset.c!==undefined?{i:+td.parentNode.dataset.i,c:+td.dataset.c}:null};
+const paintSel=()=>{
+  tb.querySelectorAll('td.sel').forEach(x=>x.classList.remove('sel'));
+  const q=rect(),f=$('#fh');
+  if(!q||!tb.children[q.r2]){f.style.display='none';return}
+  for(let i=q.r1;i<=q.r2;i++)for(let c=q.c1;c<=q.c2;c++){const td=tb.children[i]&&tb.children[i].children[c+1];if(td)td.classList.add('sel')}
+  const r=tb.children[q.r2].children[q.c2+1].getBoundingClientRect();
+  Object.assign(f.style,{display:'block',left:r.right-5+'px',top:r.bottom-5+'px'});updateEntryStatus();
+};
+tb.addEventListener('mousedown',e=>{const p=rc(e.target);if(!p)return;if(e.shiftKey&&sa){e.preventDefault();sb=p}else sa=sb=p;paintSel();updateEntryStatus()});
+tb.addEventListener('focusin',e=>{const p=rc(e.target);if(p){sa=sb=p;paintSel();updateEntryStatus()}});
+$('#entry').addEventListener('scroll',paintSel);
+const cp=(q,to,from)=>{
+  for(let c=q.c1;c<=q.c2;c++){
+    if(c===0||c===DEPT)continue;
+    rows()[to][c]=rows()[from][c];
+    const s=(Mg(from).s||{})[cols[c][0]],m=M(to);m.s=m.s||{};
+    if(s)m.s[cols[c][0]]={...s};else delete m.s[cols[c][0]];
+  }
+};
+const fillTo=(q,t)=>{
+  if(t===q.r2)return;
+  pushHistory();
+  const n=q.r2-q.r1+1;
+  if(t>q.r2)for(let i=q.r2+1;i<=t;i++)cp(q,i,q.r1+(i-q.r2-1)%n);
+  else if(t<q.r1)for(let i=q.r1-1;i>=t;i--)cp(q,i,q.r2-(q.r1-1-i)%n);
+  else return;
+  sa={i:Math.min(q.r1,t),c:q.c1};sb={i:Math.max(q.r2,t),c:q.c2};
+  render();paintSel();save();
+};
+$('#fh').addEventListener('mousedown',e=>{
+  e.preventDefault();
+  const q=rect();let t2=q.r2;
+  const mv=ev=>{const x=document.elementFromPoint(ev.clientX,ev.clientY),tr=x&&x.closest&&x.closest('#tb tr');if(tr)t2=+tr.dataset.i};
+  const up=()=>{removeEventListener('mousemove',mv);removeEventListener('mouseup',up);fillTo(q,t2)};
+  addEventListener('mousemove',mv);addEventListener('mouseup',up);
+});
+tb.addEventListener('keydown',e=>{
+  if(!(e.ctrlKey||e.metaKey)||e.key.toLowerCase()!=='d'||!sa)return;
+  e.preventDefault();
+  const q=rect();
+  if(q.r2>q.r1){pushHistory();for(let i=q.r1+1;i<=q.r2;i++)cp(q,i,q.r1)}
+  else if(q.r1>0){pushHistory();cp(q,q.r1,q.r1-1)}
+  else return;
+  render();paintSel();save();
+});
+
+const paintCell=(i,c)=>{
+  const td=tb.children[i]&&tb.children[i].children[c+1];if(!td)return;
+  const s=((Mg(i).s||{})[cols[c][0]])||{},x=td.firstChild;
+  td.style.background=s.f?'#'+s.f:'';
+  if(x){x.style.color=s.c?'#'+s.c:'';x.style.fontWeight=s.b?'700':''}
+};
+const eachSel=fn=>{const q=rect();if(!q)return;for(let i=q.r1;i<=q.r2;i++)for(let c=q.c1;c<=q.c2;c++)fn(i,c)};
+const style=(k,v)=>{
+  if(!rect())return;
+  pushHistory();
+  eachSel((i,c)=>{const m=M(i);m.s=m.s||{};const s=m.s[cols[c][0]]=m.s[cols[c][0]]||{};if(v==null)delete s[k];else s[k]=v;paintCell(i,c)});
+  save();
+};
+$('#tc').oninput=e=>style('c',e.target.value.slice(1).toUpperCase());
+$('#fc').oninput=e=>style('f',e.target.value.slice(1).toUpperCase());
+$('#bd').onclick=()=>{const q=rect();if(!q)return;style('b',((Mg(q.r1).s||{})[cols[q.c1][0]]||{}).b?null:1)};
+$('#cl').onclick=()=>{if(!rect())return;pushHistory();eachSel((i,c)=>{const m=M(i);if(m.s)delete m.s[cols[c][0]];paintCell(i,c)});save()};
+
+document.addEventListener('mousedown',e=>{
+  const t=e.target,k=t.classList;if(!k)return;
+  if(k.contains('rz')){
+    e.preventDefault();pushHistory();
+    const c=+t.dataset.c,x0=e.clientX,w0=cols[c][2]*7;
+    const mv=ev=>{cols[c][2]=Math.max(40,w0+ev.clientX-x0)/7;setW();paintSel()};
+    const up=()=>{removeEventListener('mousemove',mv);removeEventListener('mouseup',up);save()};
+    addEventListener('mousemove',mv);addEventListener('mouseup',up);
+  }else if(k.contains('rr')){
+    e.preventDefault();pushHistory();
+    const tr=t.closest('tr'),i=+tr.dataset.i,y0=e.clientY,h0=tr.offsetHeight;
+    const mv=ev=>{const h=Math.max(30,h0+ev.clientY-y0);tr.querySelectorAll('textarea').forEach(x=>x.style.height=h+'px');M(i).h=h;paintSel()};
+    const up=()=>{removeEventListener('mousemove',mv);removeEventListener('mouseup',up);save()};
+    addEventListener('mousemove',mv);addEventListener('mouseup',up);
+  }
+});
+
+let activeCellNote=null;
+const closeNoteEditor=()=>{$('#noteEditor').style.display='none';activeCellNote=null};
+$('#cancelCellNote').onclick=closeNoteEditor;
+$('#removeCellNote').onclick=()=>{
+  if(!activeCellNote)return;
+  const {i,name}=activeCellNote,m=M(i);
+  if(!m.notes||!m.notes[name]){closeNoteEditor();return;}
+  pushHistory();delete m.notes[name];if(m.notesDone)delete m.notesDone[name];
+  closeNoteEditor();render();paintSel();save();$('#historyStatus').textContent='Unsaved changes';
+};
+$('#saveCellNote').onclick=()=>{
+  if(!activeCellNote)return;
+  const {i,name}=activeCellNote,value=$('#noteEditorText').value.trim();
+  pushHistory();const m=M(i);m.notes=m.notes||{};
+  if(value)m.notes[name]=value;else{delete m.notes[name];if(m.notesDone)delete m.notesDone[name]}
+  closeNoteEditor();render();paintSel();save();$('#historyStatus').textContent='Unsaved changes';
+};
+document.addEventListener('mousedown',e=>{if($('#noteEditor').style.display==='block'&&!e.target.closest('#noteEditor')&&!e.target.closest('.note-btn'))closeNoteEditor()});
+const excelColLetter=(n)=>{let out='';for(n=n+1;n>0;n=Math.floor((n-1)/26))out=String.fromCharCode(65+(n-1)%26)+out;return out};
+const goToCellNote=(x)=>{
+  $('#notesSidebar').style.display='none';
+  if(S.cur!==x.code){S.cur=x.code;S.last=S.depts[x.code].name||x.code;$('#dn').textContent=S.last+' ('+x.code+')';tab('Data Entry')}
+  render();
+  const tr=$(`#tb tr[data-i="${x.i}"]`);
+  if(tr){tr.scrollIntoView({behavior:'smooth',block:'center'});const ci=cols.findIndex(c=>c[0]===x.name),td=tr.querySelector(`td[data-c="${ci}"]`);if(td){td.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});td.querySelector('textarea')?.focus({preventScroll:true});td.classList.add('sel');setTimeout(()=>td.classList.remove('sel'),1800)}}
+};
+const showNotesPanel=()=>{
+  const list=[];
+  Object.entries(S.depts||{}).forEach(([code,d])=>(d.m||[]).forEach((meta,i)=>Object.entries(meta.notes||{}).forEach(([name,note])=>{const ci=cols.findIndex(c=>c[0]===name);list.push({code,dept:d.name||code,i,name,note,ci,cell:`${excelColLetter(Math.max(0,ci))}${i+1}`,done:!!((meta.notesDone||{})[name])})})));
+  list.sort((a,b)=>a.done-b.done||a.code.localeCompare(b.code)||a.i-b.i);
+  $('#notesSidebarContent').innerHTML=list.length?list.map((x,k)=>`<div class="note-item${x.done?' done':''}" data-note-item="${k}" title="Click to go to this cell"><div><div class="note-meta"><b>Cell ${esc(x.cell)}</b> · ${esc(x.dept)} · ${esc(x.name)}</div><div class="note-body">${esc(x.note)}</div></div><label style="font-size:12px;display:flex;gap:5px;align-items:center;white-space:nowrap;cursor:pointer" title="Mark as done"><input type="checkbox" data-note-done="${k}" ${x.done?'checked':''}> Done</label></div>`).join(''):'<p>No cell notes yet.</p>';
+  const panel=$('#notesSidebar'),tableWrap=$('#entry');const rect=tableWrap.getBoundingClientRect();const top=Math.max(0,rect.top);const height=Math.max(160,Math.min(rect.height,window.innerHeight-top));panel.style.top=top+'px';panel.style.height=height+'px';panel.style.bottom='auto';panel.style.display='flex';
+  $('#notesSidebarContent').querySelectorAll('[data-note-done]').forEach(el=>el.onchange=e=>{e.stopPropagation();const x=list[+el.dataset.noteDone],meta=S.depts[x.code].m[x.i];meta.notesDone=meta.notesDone||{};if(el.checked)meta.notesDone[x.name]=1;else delete meta.notesDone[x.name];save();showNotesPanel()});
+  $('#notesSidebarContent').querySelectorAll('[data-note-item]').forEach(el=>el.onclick=e=>{if(e.target.closest('label')||e.target.closest('input'))return;goToCellNote(list[+el.dataset.noteItem])});
+};
+$('#closeNotesSidebar').onclick=()=>$('#notesSidebar').style.display='none';
+window.addEventListener('resize',()=>{const panel=$('#notesSidebar');if(panel.style.display==='flex'){const rect=$('#entry').getBoundingClientRect();const top=Math.max(0,rect.top);panel.style.top=top+'px';panel.style.height=Math.max(160,Math.min(rect.height,window.innerHeight-top))+'px'}});
+$('#notesPanelBtn').onclick=showNotesPanel;
+
+const buildMaster=(includeSnapshot=false)=>{
+  const wb=new ExcelJS.Workbook();
+  // In the public temporary-entry workflow, preserve every department that
+  // existed when the session started, then overlay the current in-memory state
+  // so additions and edits made during this session are included as well.
+  const merged={};
+  if(includeSnapshot && dashboardSnapshot && dashboardSnapshot.depts){
+    Object.entries(dashboardSnapshot.depts).forEach(([code,dept])=>{
+      merged[code]={...dept,rows:Array.isArray(dept.rows)?dept.rows.map(r=>r.slice()):[],m:Array.isArray(dept.m)?JSON.parse(JSON.stringify(dept.m)):[]};
+    });
+  }
+  Object.entries(S.depts||{}).forEach(([code,dept])=>{
+    const prior=merged[code]||{};
+    merged[code]={...prior,...dept,
+      rows:Array.isArray(dept&&dept.rows)?dept.rows.map(r=>r.slice()):(prior.rows||[]),
+      m:Array.isArray(dept&&dept.m)?JSON.parse(JSON.stringify(dept.m)):(prior.m||[])
+    };
+  });
+  Object.entries(merged).forEach(([code,dept])=>{
+    if(!dept || !Array.isArray(dept.rows))return;
+    const safeRows=dept.rows.map(r=>{const row=Array.isArray(r)?r.slice(0,cols.length):[];while(row.length<cols.length)row.push('');return row;});
+    addSheet(wb,code,safeRows,dept.m||[]);
+  });
+  addRef(wb,'Validation Codelists');tabs.slice(3).forEach(k=>addRef(wb,k));
+  wb.addWorksheet('_schema',{state:'veryHidden'}).getCell(1,1).value=JSON.stringify({cols,groups:D.groups});
+  return wb;
+};
+const FN='CBSL_Data_Catalog.xlsx';
+const adminMode=/\/adminSTD(?:\/|$)/i.test(location.pathname);
+// Both pages use the same workbook in the selected root folder. Notify open dashboard tabs
+// immediately after an administrator finishes writing the workbook.
+const catalogChannel=('BroadcastChannel' in window)?new BroadcastChannel('cbsl-catalog-workbook'):null;
+let directoryHandle=null, workbookHandle=null, masterWriteQueue=Promise.resolve();
+const handleDB=()=>new Promise((resolve,reject)=>{const q=indexedDB.open('cbslCatalogFolderHandles',1);q.onupgradeneeded=()=>q.result.createObjectStore('handles');q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error)});
+const getDirectory=async()=>{const db=await handleDB();return new Promise(resolve=>{const q=db.transaction('handles').objectStore('handles').get('root');q.onsuccess=()=>resolve(q.result||null);q.onerror=()=>resolve(null)})};
+const putDirectory=async h=>{const db=await handleDB();return new Promise((resolve,reject)=>{const q=db.transaction('handles','readwrite').objectStore('handles').put(h,'root');q.onsuccess=resolve;q.onerror=()=>reject(q.error)})};
+let io={
+  read:async()=>{
+    // GitHub Pages serves the workbook beside index.html. This is read-only;
+    // admin editing/saving remains on the protected local/server workflow.
+    if(!adminMode){
+      const workbookUrl=new URL(FN,document.baseURI);
+      workbookUrl.searchParams.set('cbsl_refresh',String(Date.now()));
+      const response=await fetch(workbookUrl.href,{cache:'no-store'});
+      if(!response.ok)throw new Error('Could not download '+FN+' (HTTP '+response.status+'). Check that the workbook is committed beside index.html and included in the Pages publishing source.');
+      const buffer=await response.arrayBuffer();
+      window._cbslWorkbookStamp=[response.headers.get('ETag')||'',response.headers.get('Last-Modified')||'',buffer.byteLength].join(':');
+      return buffer;
+    }
+    if(!directoryHandle)directoryHandle=await getDirectory();
+    if(!directoryHandle)throw new Error('Choose the catalog folder once to continue.');
+    let p=await directoryHandle.queryPermission({mode:'readwrite'});
+    if(p!=='granted')throw new Error('Folder permission needs to be granted.');
+    workbookHandle=await directoryHandle.getFileHandle(FN,{create:false});
+    const f=await workbookHandle.getFile();window._cbslWorkbookStamp=String(f.lastModified)+':'+String(f.size);return await f.arrayBuffer();
+  },
+  write:async b=>{
+    if(!adminMode)throw new Error('Public catalog is read-only');
+    if(!directoryHandle)directoryHandle=await getDirectory();
+    if(!directoryHandle)throw new Error('Choose the catalog folder first.');
+    let p=await directoryHandle.queryPermission({mode:'readwrite'});
+    if(p!=='granted')p=await directoryHandle.requestPermission({mode:'readwrite'});
+    if(p!=='granted')throw new Error('Write permission was not granted.');
+    workbookHandle=await directoryHandle.getFileHandle(FN,{create:false});
+    const w=await workbookHandle.createWritable();await w.write(b);await w.close();
+  }
+};
+const chooseFolder=async()=>{
+  if(!window.showDirectoryPicker){alert('This local-folder workflow requires Chrome or Edge with File System Access API support.');return;}
+  try{
+    directoryHandle=await window.showDirectoryPicker({mode:adminMode?'readwrite':'read'});
+    const p=await directoryHandle.requestPermission({mode:adminMode?'readwrite':'read'});
+    if(p!=='granted')throw new Error('Permission was not granted.');
+    await putDirectory(directoryHandle);$('#cnb').style.display='none';await boot();
+  }catch(e){if(e.name!=='AbortError')alert('Could not connect to the catalog folder: '+e.message)}
+};
+$('#chooseCatalogFolder').onclick=chooseFolder;
+const manualDashboardRefresh=async()=>{
+  const b=$('#refreshDashboardBtn');if(b)b.disabled=true;
+  $('#ms').textContent='Refreshing from '+FN+'…';
+  try{
+    if(adminMode){
+      if(!directoryHandle)directoryHandle=await getDirectory();
+      if(!directoryHandle)throw new Error('Select the catalog folder containing '+FN+'.');
+      let p=await directoryHandle.queryPermission({mode:'readwrite'});
+      if(p!=='granted')p=await directoryHandle.requestPermission({mode:'readwrite'});
+      if(p!=='granted')throw new Error('Folder permission was not granted.');
+    }
+    await pull();if(document.body.classList.contains('dash'))dash();
+    $('#ms').textContent='Dashboard refreshed from '+FN+' · '+new Date().toLocaleTimeString();
+  }catch(e){$('#ms').textContent='Refresh failed · '+e.message;if(adminMode)$('#cnb').style.display='flex';}
+  finally{if(b)b.disabled=false;}
+};
+$('#refreshDashboardBtn').onclick=manualDashboardRefresh;
+const pull=async()=>{
+  const b=await io.read();if(!b)return;
+  const kc=S.cur;
+  await parseMaster(b,1);
+  if(kc&&S.depts[kc])S.cur=kc;
+};
+let skipPullOnce=false;
+const writeMaster=async()=>{
+  if(!adminMode)return;
+  // Serialize writes so rapid edits cannot overwrite a newer workbook with an older buffer.
+  const task=masterWriteQueue.then(async()=>{
+    skipPullOnce=false;
+    const buffer=await buildMaster().xlsx.writeBuffer();
+    await io.write(buffer);
+    const savedAt=new Date().toISOString();
+    window._cbslLastSaved=new Date(savedAt).toLocaleTimeString();
+    updateEntryStatus();
+    $('#ms').textContent='Saved to local workbook · '+FN+' · '+window._cbslLastSaved;
+    if(catalogChannel)catalogChannel.postMessage({type:'workbook-updated',file:FN,savedAt});
+    try{localStorage.setItem('cbslCatalogWorkbookUpdated',savedAt)}catch(e){}
+  });
+  masterWriteQueue=task.catch(()=>{});
+  try{await task}catch(e){$('#ms').textContent='Excel save failed – '+e.message;$('#historyStatus').textContent='Excel save failed: '+e.message;throw e}
+};
+const saveNow=async()=>{
+  if(previewMode){clearTimeout(tm);$('#historyStatus').textContent='Preparing your Excel download…';await $('#dl').onclick();$('#historyStatus').textContent='Download created · not saved to the catalog workbook';return;}
+  clearTimeout(tm);S.sc={cols,groups:D.groups};
+  try{
+    localStorage.setItem('cbslCatalogV1',JSON.stringify(S));
+    window._cbslLastSaved=new Date().toLocaleTimeString();updateEntryStatus();$('#historyStatus').textContent='Saved locally · '+window._cbslLastSaved;
+    if(adminMode){await writeMaster();$('#historyStatus').textContent='Saved locally and to '+FN}
+  }catch(e){$('#historyStatus').textContent='Save failed: '+e.message;alert('Could not save the central workbook. '+e.message)}
+};
+$('#saveNow').onclick=saveNow;
+
+const accessGroupDefaults=['All CBSL Staff','Specific Departments','Specific Individuals','Other'];
+let liveReferenceSheets={};
+const parseMaster=async(buf,ks)=>{
+  const wb=new ExcelJS.Workbook();await wb.xlsx.load(buf);
+  // Reference CSV exports always come from the sheets in the currently loaded workbook.
+  liveReferenceSheets={};
+  const normSheet=n=>String(n||'').trim().toLowerCase().replace(/\s+/g,' ');
+  const referenceNames=new Set(['Validation Codelists','Field Definitions','Boundary Criteria','Summary & Notes'].map(normSheet));
+  wb.worksheets.forEach(ws=>{
+    if(!referenceNames.has(normSheet(ws.name)))return;
+    const rows=[];
+    for(let r=1;r<=ws.rowCount;r++){
+      const row=[];for(let c=1;c<=ws.columnCount;c++)row.push(cv(ws.getRow(r).getCell(c).value));
+      rows.push(row);
+    }
+    liveReferenceSheets[ws.name.trim()]=rows;
+  });
+  const validationRows=liveReferenceSheets['Validation Codelists']||[];
+  if(validationRows.length){
+    // Upgrade older workbooks that predate the Access Group codelist column.
+    let agCol=validationRows[0].findIndex(v=>String(v??'').trim().toLowerCase()==='access group');
+    if(agCol<0){agCol=validationRows[0].length;validationRows[0][agCol]='Access Group';}
+    accessGroupDefaults.forEach((v,i)=>{if(!validationRows[i+1])validationRows[i+1]=[];validationRows[i+1][agCol]=v;});
+    liveReferenceSheets['Validation Codelists']=validationRows;
+    // Build dropdowns from the actual Validation Codelists headers, rather than
+    // relying on fixed Excel column letters. This keeps the entry page and
+    // downloaded templates aligned when the reference sheet columns move.
+    D.lists=D.lists||{};D.lref=D.lref||{};
+    const normCodelistHeader=value=>String(value??'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const codelistAliases={
+      'Sensitive Personal data category':'Personal data category',
+      'Sensitive Personal Data Category':'Personal data category'
+    };
+    const headerToIndex=new Map();
+    (validationRows[0]||[]).forEach((header,index)=>{
+      const key=normCodelistHeader(header);if(key)headerToIndex.set(key,index);
+    });
+    const excelColumnLetter=index=>{let n=index+1,out='';while(n){const rem=(n-1)%26;out=String.fromCharCode(65+rem)+out;n=Math.floor((n-1)/26);}return out;};
+    cols.forEach(col=>{
+      const fieldName=String(col[0]??'').trim();
+      const sourceName=codelistAliases[fieldName]||fieldName;
+      const index=headerToIndex.get(normCodelistHeader(sourceName));
+      if(index===undefined)return;
+      const letter=excelColumnLetter(index);col[3]=letter;
+      const values=[...new Set(validationRows.slice(1).map(row=>String(row?.[index]??'').trim()).filter(Boolean))];
+      D.lists[letter]=values;
+      const lastRow=values.length?validationRows.length:1;
+      D.lref[letter]=`$${letter}$2:$${letter}$${Math.max(2,lastRow)}`;
+    });
+  }
+  const sc=wb.getWorksheet('_schema');
+  if(sc&&!ks&&!(S.sc&&Array.isArray(S.sc.cols)))try{const j=JSON.parse(sc.getCell(1,1).value);cols=(j.cols||[]).filter(c=>!(S.removedCols||[]).includes(c[0]));D.groups=j.groups}catch(e){}
+  const agSchemaCol=cols.find(c=>c[0]==='Access Group');if(agSchemaCol)agSchemaCol[3]='U';
+  sync();const ds={},hx=[];
+  wb.worksheets.forEach(ws=>{
+    // Treat only worksheets with the catalog's row-3 ID and Name headers as department data.
+    // This avoids accidentally parsing reference sheets (including names with trailing spaces)
+    // as departments, which previously caused department records to disappear on re-login.
+    if(ws.name==='_schema'||referenceNames.has(normSheet(ws.name)))return;
+    const h=ws.getRow(3).values,map=[];
+    const headerNames=h.slice(1).map(v=>normSheet(cv(v)));
+    if(!headerNames.includes('id')||!headerNames.includes('name'))return;
+    for(let k=1;k<h.length;k++){const n=cv(h[k]);if(!n)continue;let t=cols.findIndex(c=>normSheet(c[0])===normSheet(n));if(t<0){if((S.removedCols||[]).includes(n))return;cols.push([n,0,18,'',cols[cols.length-1][4],1]);t=cols.length-1;sync()}map.push([k,t,n])}
+    const rows=[],m=[];
+    for(let r=4;r<=ws.rowCount;r++){const row=ws.getRow(r),rec=Array(cols.length).fill(''),st={},notes={};let any=false;map.forEach(([k,t,n])=>{const c=row.getCell(k),v=cv(c.value),style={};if(v){any=true;rec[t]=v}if(c.fill&&c.fill.pattern==='solid'&&c.fill.fgColor&&c.fill.fgColor.argb)style.f=c.fill.fgColor.argb.slice(2);if(c.font&&c.font.color&&c.font.color.argb&&c.font.color.argb!=='FF000000')style.c=c.font.color.argb.slice(2);if(c.font&&c.font.bold)style.b=1;if(Object.keys(style).length)st[n]=style;if(c.note){const note=Array.isArray(c.note)?c.note.map(x=>typeof x==='string'?x:(x.text||'')).join(''):String(c.note);if(note)notes[n]=note}});if(!any)continue;const meta=row.height?{s:st,h:Math.round(row.height/.75)}:{s:st};if(Object.keys(notes).length)meta.notes=notes;rows.push(rec);m.push(meta)}hx.push([ws.name,rows,m])
+  });
+  hx.forEach(([code,rows,m])=>{rows.forEach(r=>{while(r.length<cols.length)r.push('')});const nm=(rows[0]&&rows[0][DEPT])||(D.depts.find(d=>d[1]===code)||[])[0]||code;rows.forEach(r=>{if(!r[DEPT])r[DEPT]=nm});if(!D.depts.some(d=>d[1]===code))S.codes[nm]=code;ds[code]={name:nm,rows,m}});S.depts=ds;if(S.cur&&!ds[S.cur])S.cur='';
+  try{S.sc={cols,groups:D.groups};localStorage.setItem('cbslCatalogV1',JSON.stringify(S));}catch(e){console.warn('Could not cache workbook data locally:',e)}
+};
+async function boot(){
+  try{
+    if(!adminMode){
+      $('#cnb').style.display='none';
+      await pull();
+      $('#ms').textContent='Loaded '+FN+' from GitHub Pages · '+new Date().toLocaleTimeString();
+      buildHead();tab('Dashboard');
+      return;
+    }
+    if(!directoryHandle)directoryHandle=await getDirectory();
+    if(!directoryHandle){$('#cnb').style.display='flex';$('#ms').textContent='Choose the catalog folder once';return;}
+    const p=await directoryHandle.queryPermission({mode:'readwrite'});
+    if(p!=='granted'){ $('#cnb').style.display='flex';$('#ms').textContent='Folder permission required';return; }
+    await pull();$('#ms').textContent='Automatically refreshed from '+FN+' · '+new Date().toLocaleTimeString();
+    buildHead();tab('Dashboard');
+  }catch(e){
+    $('#ms').textContent='Could not load '+FN+' · '+e.message;
+    if(adminMode){$('#cnb').style.display='flex';$('#folderHelp').textContent='Make sure CBSL_Data_Catalog.xlsx is in the selected folder. '+e.message;}
+  }
+}
+// Public root is dashboard-only; adminSTD keeps the complete data-entry and reference-sheet editor.
+if(!adminMode){$('#bde').style.display='none';$('#tabs').style.display='none';$('#tools').style.display='none';$('#downloadTemplateBtn').style.display='';}
+else{$('#bde').style.display='';$('#tabs').style.display='';$('#downloadTemplateBtn').style.display='';}
+$('#bde').onclick=()=>{if(adminMode)needDept(()=>{});};
+$('#bback').onclick=()=>{
+  if(previewMode){
+    previewMode=false;clearTimeout(tm);
+    if(dashboardSnapshot)S=dashboardSnapshot;dashboardSnapshot=null;
+    document.body.classList.remove('preview-mode');
+    $('#saveNow').textContent='💾 Save';
+    $('#start').style.display='none';
+    buildHead();tab('Dashboard');dash();
+    return;
+  }
+  tab('Dashboard');
+};
+boot();
+let dashboardRefreshBusy=false;
+const refreshPublicDashboard=async()=>{
+  if(adminMode||document.visibilityState!=='visible'||dashboardRefreshBusy)return;
+  dashboardRefreshBusy=true;
+  try{
+    const before=window._cbslWorkbookStamp||'';
+    await pull();
+    const after=window._cbslWorkbookStamp||'';
+    if(after!==before){
+      if(document.body.classList.contains('dash'))dash();
+      $('#ms').textContent='Dashboard updated from '+FN+' · '+new Date().toLocaleTimeString();
+    }
+  }catch(e){$('#ms').textContent='Could not refresh '+FN+' · '+e.message}
+  finally{dashboardRefreshBusy=false}
+};
+if(catalogChannel)catalogChannel.addEventListener('message',e=>{
+  if(e.data&&e.data.type==='workbook-updated')refreshPublicDashboard();
+});
+window.addEventListener('storage',e=>{if(e.key==='cbslCatalogWorkbookUpdated')refreshPublicDashboard()});
+// Each local HTML page selects the same folder independently. Poll the workbook timestamp
+// so dashboard refresh does not depend on cross-file BroadcastChannel/localStorage behaviour.
+setInterval(refreshPublicDashboard,30000);
+window.addEventListener('focus',refreshPublicDashboard);
+document.addEventListener('visibilitychange',refreshPublicDashboard);
+
+let fl={},fk='',mfo=false,cdo=false,showStats=true,vc=null,cur=[];
+const PRI=['Department','Topic'];
+const DEF=['ID','Name','Description','Key data fields (summary)','Topic','Keywords','Language','Geographic coverage','Frequency','Information Classification','Department','URL'];
+try{const v=JSON.parse(localStorage.getItem('cbslVc')||'null');if(v)vc=new Set(v)}catch(e){}
+const saveVc=()=>{try{localStorage.setItem('cbslVc',JSON.stringify([...vc]))}catch(e){}};
+const vis=()=>{if(!vc)vc=new Set(DEF);return cols.map((c,i)=>i).filter(i=>vc.has(cols[i][0]))};
+const PAL2=['#2f75b5','#c9a227','#548235','#c65911','#8064a2','#c00000','#1b998b','#9fc5e8','#f4b6c2','#b6d7a8'];
+const pie=e=>{
+  const tot=e.reduce((a,x)=>a+x[1],0)||1;let a=0;
+  const g=e.map(([v,n],i)=>{const s=a;a+=n*100/tot;return `${PAL2[i%10]} ${s}% ${a}%`}).join(',');
+  return `<div class="pie" style="background:${e.length?`conic-gradient(${g})`:'#ffffff33'}"></div><ul>${e.map(([v,n],i)=>`<li><i style="background:${PAL2[i%10]}"></i>${esc(v)} (${n})</li>`).join('')}</ul>`;
+};
+const split=v=>(v||'').split(',').map(s=>s.trim()).filter(Boolean);
+let searchRenderTimer=null;
+const dData=()=>{
+  const all=Object.entries(S.depts).filter(([c,d])=>d.rows.length).map(([c,d])=>({c,n:d.name,rows:d.rows}));
+  const k=fk.trim().toLowerCase(),F=Object.entries(fl).map(([n,s])=>[cols.findIndex(c=>c[0]===n),s]).filter(x=>x[0]>-1);
+  const rs=all.flatMap(x=>x.rows.map(r=>[x,r])).filter(([x,r])=>F.every(([i,s])=>s.has(r[i])||split(r[i]).some(v=>s.has(v)))&&(!k||r.join(' ').toLowerCase().includes(k)));
+  const idCol=cols.findIndex(c=>String(c[0]).trim().toLowerCase()==='id');
+  if(idCol>=0)rs.sort((a,b)=>String(a[1][idCol]??'').localeCompare(String(b[1][idCol]??''),undefined,{numeric:true,sensitivity:'base'}));
+  return{all,rs};
+};
+const ddHTML=i=>{
+  const c=cols[i],set=fl[c[0]]||new Set(),vals=new Set(D.lists[c[3]]||[]);
+  Object.values(S.depts).forEach(d=>d.rows.forEach(r=>split(r[i]).forEach(v=>vals.add(v))));
+  const deptCodes=new Map((D.depts||[]).filter(d=>d[1]).map(d=>[d[0],d[1]]));
+  const options=[...vals].map(v=>({value:v,label:c[0]==='Department'&&deptCodes.has(v)?`${deptCodes.get(v)} — ${v}`:v}));
+  options.sort((a,b)=>a.label.localeCompare(b.label,undefined,{numeric:true,sensitivity:'base'}));
+  return `<div class="dd" data-n="${esc(c[0])}"><label>${esc(c[0])}</label><button class="ddb${set.size?' on':''}"><span>${set.size?set.size+' selected':'All'}</span><em>▾</em></button><div class="ddp"><input class="dds" placeholder="Search ${esc(c[0].toLowerCase())}…" aria-label="Search ${esc(c[0].toLowerCase())} options"><div class="ddl">${options.map(o=>`<label><input type="checkbox" value="${esc(o.value)}"${set.has(o.value)?' checked':''}><span>${esc(o.label)}</span></label>`).join('')}</div><div class="ddf"><span>${options.length} options</span><a data-x="clr">Clear</a></div></div></div>`;
+};
+const mfTxt=()=>{const n=Object.keys(fl).filter(k=>!PRI.includes(k)).length;return 'More filters '+(mfo?'▴':'▾')+(n?' ('+n+')':'')};
+const drawer=()=>`<div class="dh"><b>Columns to show / download</b><button class="x" id="cx">✕</button></div><div class="dq"><button class="btn" data-a="all">All</button><button class="btn" data-a="def">Mandatory</button><button class="btn" data-a="none">None</button></div><div class="dl">${cols.map(c=>`<label><input type="checkbox" value="${esc(c[0])}"${vc.has(c[0])?' checked':''}><i style="background:#${c[4]}"></i>${esc(c[0])}</label>`).join('')}</div>`;
+function dash(){
+  vis();
+  const pri=PRI.map(n=>cols.findIndex(c=>c[0]===n)).filter(i=>i>-1);
+  const more=cols.map((c,i)=>i).filter(i=>cols[i][3]&&!PRI.includes(cols[i][0]));
+  $('#dash').innerHTML=`<div class="dg${showStats?'':' nostats'}"><aside class="dsb" id="dk"></aside><section class="dmn"><div class="pn2"><div class="flt">${pri.map(ddHTML).join('')}<div><label>Keywords</label><input class="kw" id="fk" value="${esc(fk)}" placeholder="Search all fields…"></div><button class="btn" id="mfb">${mfTxt()}</button><button class="btn" id="fcl">Clear filters</button><button class="btn" id="columnMenuBtn" title="Show or hide columns panel" aria-label="Show or hide columns panel"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM9 4v16m6-16v16"/></svg> Columns</button></div><div class="flt${mfo?' on':''}" id="mf">${more.map(ddHTML).join('')}</div></div><div class="pn2 tcard"><div class="th"><h2>Available Datasets</h2><span id="cnt"></span></div><div id="dt"></div></div></section><aside class="drw${cdo?' open':''}" id="cd">${drawer()}</aside></div>`;
+  $('#dash').onclick=e=>{
+    if(e.target.closest('#columnMenuBtn')){cdo=!cdo;$('#cd').classList.toggle('open',cdo);return}
+    const b=e.target.closest('.ddb');
+    if(b){const d=b.parentNode,o=d.classList.contains('open');document.querySelectorAll('.dd.open').forEach(x=>x.classList.remove('open'));if(!o)d.classList.add('open');return}
+    const a=e.target.closest('[data-x]');
+    if(a){const d=a.closest('.dd');delete fl[d.dataset.n];d.querySelectorAll('input[type=checkbox]').forEach(x=>x.checked=false);badge(d);upd();return}
+    if(e.target.id==='mfb'){mfo=!mfo;$('#mf').classList.toggle('on',mfo);$('#mfb').textContent=mfTxt();return}
+    if(e.target.id==='fcl'){fl={};fk='';dash();return}
+    if(!e.target.closest('.dd'))document.querySelectorAll('.dd.open').forEach(x=>x.classList.remove('open'));
+  };
+  $('#dash').onchange=e=>{
+    const d=e.target.closest('.dd');if(!d)return;
+    const n=d.dataset.n,s=fl[n]=fl[n]||new Set();
+    e.target.checked?s.add(e.target.value):s.delete(e.target.value);
+    if(!s.size)delete fl[n];
+    badge(d);upd();
+  };
+  $('#dash').oninput=e=>{
+    if(e.target.id==='fk'){
+      fk=e.target.value;clearTimeout(searchRenderTimer);
+      searchRenderTimer=setTimeout(()=>{if(document.body.classList.contains('dash')&&$('#dt'))upd()},140);
+    }
+  };
+  // Search department/topic (and other filter) options without rebuilding the dashboard.
+  // Use the visible option text, keep the dropdown open, and show a clear empty state.
+  $('#dash').querySelectorAll('.dds').forEach(input=>{
+    const filterOptions=()=>{
+      const panel=input.closest('.ddp');
+      if(!panel)return;
+      const query=input.value.trim().toLocaleLowerCase();
+      const labels=[...panel.querySelectorAll('.ddl label')];
+      let visible=0;
+      labels.forEach(label=>{
+        const optionText=(label.querySelector('span')?.textContent||label.textContent||'').trim().toLocaleLowerCase();
+        const match=!query||optionText.includes(query);
+        label.style.setProperty('display',match?'flex':'none','important');
+        if(match)visible++;
+      });
+      let empty=panel.querySelector('.dd-no-results');
+      if(!visible){
+        if(!empty){empty=document.createElement('div');empty.className='dd-no-results';empty.textContent='No matching options';panel.querySelector('.ddl').appendChild(empty);}
+      }else if(empty){empty.remove();}
+      const count=panel.querySelector('.ddf span');
+      if(count)count.textContent=query?`${visible} matching / ${labels.length} options`:`${labels.length} options`;
+    };
+    input.addEventListener('input',filterOptions);
+    input.addEventListener('keydown',e=>{if(e.key==='Escape'){input.value='';filterOptions();input.blur();}});
+  });
+  $('#cd').onchange=e=>{if(e.target.type!=='checkbox')return;e.target.checked?vc.add(e.target.value):vc.delete(e.target.value);saveVc();upd()};
+  $('#cd').onclick=e=>{
+    const b=e.target.closest('button');if(!b)return;
+    if(b.id==='cx'){cdo=false;$('#cd').classList.remove('open');return}
+    vc=new Set(b.dataset.a==='all'?cols.map(c=>c[0]):b.dataset.a==='def'?cols.filter(c=>!!c[1]).map(c=>c[0]):[]);
+    saveVc();$('#cd').innerHTML=drawer();upd();
+  };
+  $('#dt').onclick=e=>{
+    const tr=e.target.closest('tr[data-n]');if(!tr)return;
+    const r=cur[+tr.dataset.n][1],N1=cols.findIndex(c=>c[0]==='Name');
+    $('#mc').innerHTML=`<div class="record-modal-head"><h2>${esc(r[N1])}</h2><button type="button" class="btn record-modal-close-top" id="noTop" aria-label="Close record details" title="Close">✕ Close</button></div><div class="kv">${cols.map((c,i)=>r[i]?`<div><b>${esc(c[0])}</b><span>${esc(r[i])}</span></div>`:'').join('')}</div><p><button class="btn" id="no">Close</button></p>`;
+    $('#mod').style.display='flex';
+    $('#no').onclick=()=>$('#mod').style.display='none';
+  document.addEventListener('click',e=>{if(e.target.closest('#noTop')){e.preventDefault();e.stopPropagation();$('#mod').style.display='none';}});
+  };
+  upd();
+}
+const statsMenuBtn=$('#statsMenuBtn');
+if(statsMenuBtn)statsMenuBtn.onclick=()=>{showStats=!showStats;const g=$('#dash .dg');if(g)g.classList.toggle('nostats',!showStats);statsMenuBtn.setAttribute('aria-expanded',String(showStats));};
+
+function badge(d){
+  const n=(fl[d.dataset.n]||{}).size||0,b=d.querySelector('.ddb');
+  b.classList.toggle('on',n>0);b.firstChild.textContent=n?n+' selected':'All';
+  $('#mfb').textContent=mfTxt();
+}
+const cw=i=>Math.min(360,Math.max(110,Math.round(cols[i][2]*7)));
+function upd(){
+  const {all,rs}=dData(),CL=cols.findIndex(c=>c[0]==='Information Classification'),ix=vis();
+  cur=rs;
+  const byD=new Map(),byC=new Map();
+  rs.forEach(([x,r])=>{byD.set(x.n,(byD.get(x.n)||0)+1);split(r[CL]).forEach(v=>byC.set(v,(byC.get(v)||0)+1))});
+  const srt=m=>[...m].sort((a,b)=>b[1]-a[1]),kc=(a,b)=>`<div class="kc"><span>${a}</span><b>${b}</b></div>`;
+  $('#dk').innerHTML=`<h3>Statistics</h3><div class="kcs">${kc('Departments',all.length)+kc('Total datasets',all.reduce((a,x)=>a+x.rows.length,0))+kc('Selected datasets',rs.length)}</div><h4>Datasets per selected department</h4>${pie(srt(byD))}<h4>Data classification</h4>${pie(srt(byC))}`;
+  $('#cnt').textContent=rs.length+' datasets · '+ix.length+' columns shown';
+  const query=fk.trim();
+  const highlighted=(value)=>{const safe=esc(value);if(!query)return safe;const terms=query.split(/\s+/).filter(Boolean).sort((a,b)=>b.length-a.length);if(!terms.length)return safe;const re=new RegExp('('+terms.map(t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')','ig');return safe.replace(re,'<mark class="search-hit">$1</mark>')};
+  $('#dt').innerHTML=ix.length?`<table style="width:max(100%, ${ix.reduce((a,i)=>a+cw(i),0)}px)"><colgroup>${ix.map(i=>`<col style="width:${cw(i)}px">`).join('')}</colgroup><tr>${ix.map(i=>`<th style="border-top-color:#${cols[i][4]}">${esc(cols[i][0])}</th>`).join('')}</tr>${rs.slice(0,500).map(([x,r],n)=>`<tr data-n="${n}">${ix.map(i=>{const v=r[i];return `<td>${cols[i][0]==='URL'&&/^https?:/i.test(v)?`<a href="${esc(v)}" target="_blank" onclick="event.stopPropagation()">Open →</a>`:highlighted(v)}</td>`}).join('')}</tr>`).join('')}</table>${rs.length>500?`<p class="empty">Showing the first 500 of ${rs.length} datasets. Download to get all of them.</p>`:''}`:'<p class="empty">Choose at least one column from the Columns panel.</p>';
+}
+$('#bde').onclick=()=>needDept(()=>{});
+$('#bback').onclick=()=>{if(previewMode){previewMode=false;clearTimeout(tm);if(dashboardSnapshot)S=dashboardSnapshot;dashboardSnapshot=null;document.body.classList.remove('preview-mode');$('#saveNow').textContent='💾 Save';$('#historyStatus').textContent='Dashboard data restored · temporary edits discarded unless downloaded';$('#start').style.display='none';$('#dsel').innerHTML=D.depts.map(d=>`<option value="${esc(d[0])}">${esc(d[0])}${d[1]?' ('+esc(d[1])+')':''}</option>`).join('');buildHead();tab('Dashboard');dash();}else tab('Dashboard');};
+$('#bdl').onclick=async()=>{
+  const {rs}=dData(),ix=vis();
+  if(!rs.length)return alert('No datasets match the current filters.');
+  if(!ix.length)return alert('Choose at least one column first.');
+  const g=new Map();
+  rs.forEach(([x,r])=>{if(!g.has(x.c))g.set(x.c,[]);g.get(x.c).push(r)});
+  const wb=new ExcelJS.Workbook();
+  g.forEach((rows,code)=>{
+    const ws=wb.addWorksheet(code,{views:[{state:'frozen',ySplit:1}]});
+    ws.columns=ix.map(i=>({width:cols[i][2]}));
+    ix.forEach((i,k)=>{
+      const c=ws.getCell(1,k+1);c.value=cols[i][0];c.fill=fill(cols[i][4]);
+      c.font={bold:true,color:{argb:fg(cols[i][4])==='#fff'?'FFFFFFFF':'FF0E2841'}};
+      c.alignment={wrapText:true,vertical:'middle',horizontal:'center'};
+    });
+    ws.getRow(1).height=36;
+    rows.forEach((r,n)=>ix.forEach((i,k)=>{const c=ws.getCell(n+2,k+1);if(r[i]!=='')c.value=r[i];c.alignment={vertical:'top',wrapText:true}}));
+    ws.autoFilter={from:{row:1,column:1},to:{row:1,column:ix.length}};
+  });
+  await saveWb(wb,'CBSL_Datasets_'+new Date().toISOString().slice(0,10)+'.xlsx');
+};
+updateHistoryButtons();
+
+// Department-aware Excel template: one department catalog worksheet plus reference worksheets.
+const templateModal=$('#templateModal');
+const deptDivisionMap=D.deptDivisionMap||{};
+function templateControls(){
+  const box=$('#templateFields');
+  const deptOpts=Object.keys(deptDivisionMap).filter(n=>(deptDivisionMap[n]||{}).code).sort((a,b)=>a.localeCompare(b));
+  box.style.gridTemplateColumns='1fr';
+  box.innerHTML=`<label style="grid-column:1/-1">Department<select id="tplDept" style="display:block;width:100%;padding:10px;margin-top:6px">${deptOpts.map(n=>`<option value="${esc(n)}">${esc(n)} (${esc(deptDivisionMap[n].code)})</option>`).join('')}</select></label>`;
+}
+$('#downloadTemplateBtn').onclick=()=>{templateControls();templateModal.style.display='flex'};
+$('#cancelTemplate').onclick=()=>templateModal.style.display='none';
+const addLiveReferenceSheet=(wb,name,rows)=>{
+  const ws=wb.addWorksheet(name);
+  const styleRef=D.refs&&D.refs[name];
+  if(styleRef&&Array.isArray(styleRef.w))styleRef.w.forEach((w,i)=>ws.getColumn(i+1).width=w);
+  else if(rows[0])rows[0].forEach((_,i)=>ws.getColumn(i+1).width=24);
+  rows.forEach((row,ri)=>row.forEach((value,ci)=>{
+    const cell=ws.getCell(ri+1,ci+1);if(value!==''&&value!==null&&value!==undefined)cell.value=value;
+    const st=styleRef&&styleRef.r&&styleRef.r[ri]&&styleRef.r[ri][ci];
+    if(st){cell.font={name:'Calibri',bold:!!st[1]};if(st[2])cell.fill=fill(st[2]);}
+    else if(ri===0)cell.font={name:'Calibri',bold:true};
+    cell.alignment={vertical:'top',wrapText:true};
+  }));
+  if(styleRef&&Array.isArray(styleRef.m))styleRef.m.forEach(range=>{try{ws.mergeCells(range)}catch(e){}});
+  if(rows.length)ws.autoFilter={from:{row:1,column:1},to:{row:1,column:Math.max(1,rows[0].length)}};
+  ws.views=[{state:'frozen',ySplit:1}];
+  return ws;
+};
+$('#createTemplate').onclick=async()=>{
+  const btn=$('#createTemplate');btn.disabled=true;btn.textContent='Creating workbook…';
+  try{
+    const dept=$('#tplDept').value;
+    const deptCode=(deptDivisionMap[dept]||{}).code||'';
+    if(!deptCode){alert('A department code is not available for '+dept+'. Please select a department with a valid department code.');return;}
+    const safeCode=String(deptCode).trim().replace(/[\\/*?:\[\]]/g,'-').slice(0,20);
+    const wb=new ExcelJS.Workbook();wb.creator='CBSL Data Catalog';wb.subject='Department data catalog template';wb.created=new Date();
+    // addSheet creates the same three-row title/group/header layout and Excel dropdown validations.
+    addSheet(wb,safeCode+' Data Catalog',[],[]);
+    const referenceOrder=['Validation Codelists','Field Definitions','Boundary Criteria','Summary & Notes'];
+    const normRef=n=>String(n||'').trim().toLowerCase().replace(/\s+/g,' ');
+    const liveNames=Object.keys(liveReferenceSheets||{});
+    const missing=referenceOrder.filter(name=>!liveNames.some(actual=>normRef(actual)===normRef(name)));
+    if(missing.length){alert('The connected CBSL_Data_Catalog.xlsx is missing reference worksheet(s): '+missing.join(', '));return;}
+    referenceOrder.forEach(name=>{
+      const actual=liveNames.find(n=>normRef(n)===normRef(name));
+      let rows=(liveReferenceSheets[actual]||[]).map(r=>r.slice());
+      addLiveReferenceSheet(wb,actual,rows);
+    });
+    // Keep the department-specific defaults visible in the first blank data row.
+    const dataWs=wb.getWorksheet(safeCode+' Data Catalog');
+    // Only the selected department is prefilled; all other fields remain blank.
+    cols.forEach((col,i)=>{if(col[0]==='Department')dataWs.getCell(4,i+1).value=dept;});
+    const filename='CBSL_'+safeCode+'_Data_Catalog_Template.xlsx';
+    await saveWb(wb,filename);templateModal.style.display='none';
+  }catch(e){console.error('Template workbook creation failed',e);alert('Could not create the Excel template: '+e.message);}
+  finally{btn.disabled=false;btn.textContent='Download Excel workbook';}
+};
+$('#downloadTemplateBtn').style.display='';
+
+
+// Data workflow information popup (image is expected beside index.html in the root folder).
+(()=>{
+  const modal=document.getElementById('dataWorkflowModal');
+  const openBtn=document.getElementById('dataWorkflowBtn');
+  const closeBtn=document.getElementById('closeDataWorkflow');
+  if(!modal||!openBtn||!closeBtn)return;
+  const close=()=>{modal.classList.remove('open');};
+  openBtn.addEventListener('click',()=>modal.classList.add('open'));
+  closeBtn.addEventListener('click',close);
+  modal.addEventListener('click',event=>{if(event.target===modal)close();});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&modal.classList.contains('open'))close();});
+})();
+</script>
+</body>
+</html>
